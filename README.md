@@ -102,3 +102,6 @@ The included workbook contains synthetic demonstration data only. The repository
 
 Power BI **Publish to web** is not required to evaluate this project and should only be used after a separate public-data and security review.
 
+## License
+
+This project is released under the [MIT License](LICENSE).

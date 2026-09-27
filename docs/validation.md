@@ -68,4 +68,4 @@ Static validation cannot reproduce Power BI Desktop rendering or every interacti
 6. Save, close, reopen, and refresh once more.
 7. Run `scripts\set_local_source.ps1 -Reset` before committing.
 
-The repository deliberately does not include a license. The owner should choose and add one before granting reuse rights.
+The repository is distributed under the MIT License, matching the licensing approach used by the owner's comparable analytics portfolio publication.
