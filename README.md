@@ -17,6 +17,14 @@ A four-page Power BI portfolio project that demonstrates executive, operational,
 
 ## Dashboard preview
 
+### Leadership Quality & Operations — Executive Overview
+
+![Leadership dashboard showing enterprise KPI cards, monthly quality and cost trends, OEE by line, and the governed KPI scorecard](assets/screenshots/leadership-executive-overview.png)
+
+### Line Operations Control
+
+![Line Operations Control dashboard showing production attainment, planned versus produced quantity, downtime, quality loss, and operational exceptions](assets/screenshots/line-operations-control.png)
+
 ### Tactical Performance Management
 
 ![Tactical Performance Management dashboard showing governed KPI targets, a 13-week trend, monthly status, and the corrective-action queue](assets/screenshots/tactical-performance-management.png)

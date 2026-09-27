@@ -50,4 +50,4 @@ The complete project, source code, documentation, and reproduction steps are ava
 
 **GitHub repository:** https://github.com/Sigma-KBM/KMB-Manufacturing-Dashboard
 
-Suggested publication images are available in `assets/screenshots/`: one tactical-management view and one advanced-analytics view.
+Publication-ready images for all four dashboard pages are available in `assets/screenshots/`.
