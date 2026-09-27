@@ -1,0 +1,28 @@
+{
+  "name": "KMB Accessible Portfolio Theme",
+  "dataColors": ["#1F4E78", "#0F6B78", "#5B6770", "#6B7280", "#456990", "#2A7F8E"],
+  "background": "#FFFFFF",
+  "foreground": "#17212B",
+  "tableAccent": "#1F4E78",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [{"show": true, "fontFamily": "Segoe UI", "fontSize": 16, "color": {"solid": {"color": "#17212B"}}}],
+        "labels": [{"color": {"solid": {"color": "#17212B"}}, "fontSize": 12, "fontFamily": "Segoe UI"}],
+        "background": [{"show": true, "color": {"solid": {"color": "#FFFFFF"}}, "transparency": 0}],
+        "border": [{"show": false}]
+      }
+    },
+    "slicer": {
+      "*": {
+        "title": [{"show": true, "fontSize": 14, "color": {"solid": {"color": "#17212B"}}}]
+      }
+    }
+  },
+  "textClasses": {
+    "title": {"fontFace": "Segoe UI Semibold", "fontSize": 24, "color": "#17212B"},
+    "header": {"fontFace": "Segoe UI Semibold", "fontSize": 16, "color": "#17212B"},
+    "callout": {"fontFace": "Segoe UI Semibold", "fontSize": 24, "color": "#17212B"},
+    "label": {"fontFace": "Segoe UI", "fontSize": 12, "color": "#17212B"}
+  }
+}

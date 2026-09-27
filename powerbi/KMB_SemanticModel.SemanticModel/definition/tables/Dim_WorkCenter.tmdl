@@ -1,0 +1,67 @@
+table Dim_WorkCenter
+	lineageTag: a3847268-7060-43c8-80a5-dbf2414d33dd
+
+	column WorkCenterKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 3a714e36-0676-4307-b633-6583ac7412cd
+		summarizeBy: none
+		sourceColumn: WorkCenterKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkCenterCode
+		dataType: string
+		lineageTag: 14022f66-5ccd-4d91-a7f0-835d5b60c17b
+		summarizeBy: none
+		sourceColumn: WorkCenterCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Line
+		dataType: string
+		lineageTag: eea4e519-93b0-4968-bada-7c1c39796fa7
+		summarizeBy: none
+		sourceColumn: Line
+
+		annotation SummarizationSetBy = Automatic
+
+	column Process
+		dataType: string
+		lineageTag: 5ae95857-c296-406b-a4b0-46c6638e33b8
+		summarizeBy: none
+		sourceColumn: Process
+
+		annotation SummarizationSetBy = Automatic
+
+	column Department
+		dataType: string
+		lineageTag: 773636a1-7501-4059-88c8-206f19436874
+		summarizeBy: none
+		sourceColumn: Department
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_WorkCenter = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Dim_WorkCenter = Source{[Item = "Dim_WorkCenter", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Dim_WorkCenter,
+				        {
+				            {"WorkCenterKey", Int64.Type},
+				            {"WorkCenterCode", type text},
+				            {"Line", type text},
+				            {"Process", type text},
+				            {"Department", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

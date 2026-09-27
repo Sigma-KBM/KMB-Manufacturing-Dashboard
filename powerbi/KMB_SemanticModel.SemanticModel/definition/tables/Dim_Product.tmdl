@@ -1,0 +1,100 @@
+table Dim_Product
+	lineageTag: 148e59d2-6e2e-4235-8c70-1f5b173251af
+
+	column ProductKey
+		dataType: int64
+		formatString: 0
+		lineageTag: e16396d2-16dc-47e4-b611-33e7549ae68e
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductCode
+		dataType: string
+		lineageTag: 3aa22e7c-fa83-4bf0-b4d2-0cbc13d88773
+		summarizeBy: none
+		sourceColumn: ProductCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductFamily
+		dataType: string
+		lineageTag: 9b130c4a-99b0-41ae-9312-1b0f06962ab4
+		summarizeBy: none
+		sourceColumn: ProductFamily
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: fcdbf10b-1519-4228-b55a-7178a565253b
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Revision
+		dataType: string
+		lineageTag: 805c6034-3479-4b3d-8d55-b7cf95f4faeb
+		summarizeBy: none
+		sourceColumn: Revision
+
+		annotation SummarizationSetBy = Automatic
+
+	column StandardCycleMinutes
+		dataType: double
+		lineageTag: 0b2f7010-3435-4742-9ea2-fd10efbfac53
+		summarizeBy: sum
+		sourceColumn: StandardCycleMinutes
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column StandardUnitValue
+		dataType: double
+		lineageTag: 664580f5-b11a-4354-9be6-ec19bcb7a2a4
+		summarizeBy: sum
+		sourceColumn: StandardUnitValue
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column StandardUnitCost
+		dataType: double
+		lineageTag: ad68d744-3c9b-4a8c-8545-252666db8093
+		summarizeBy: sum
+		sourceColumn: StandardUnitCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Dim_Product = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Dim_Product = Source{[Item = "Dim_Product", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Dim_Product,
+				        {
+				            {"ProductKey", Int64.Type},
+				            {"ProductCode", type text},
+				            {"ProductFamily", type text},
+				            {"ProductName", type text},
+				            {"Revision", type text},
+				            {"StandardCycleMinutes", type number},
+				            {"StandardUnitValue", type number},
+				            {"StandardUnitCost", type number}
+				        }
+				    )
+				in
+				#"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,26 @@
+{
+  "file": "kmb_synthetic_operations.xlsx",
+  "sha256": "c171e240b3e09602aa939aae65ecaa7bab25bffa5c186976dae5866ba0032600",
+  "seed": 20260918,
+  "data_source": "Synthetic KMB Demonstration",
+  "period": {
+    "start": "2024-09-01",
+    "end": "2026-08-31"
+  },
+  "row_counts": {
+    "Dim_Date": 730,
+    "Dim_Product": 6,
+    "Dim_WorkCenter": 6,
+    "Dim_Employee": 60,
+    "Dim_Defect": 6,
+    "Dim_Supplier": 4,
+    "Fact_Production": 6252,
+    "Fact_QualityInspection": 6252,
+    "Fact_MRB": 717,
+    "Fact_CorrectiveAction": 717,
+    "Fact_Training": 909,
+    "Fact_Labor": 30220,
+    "Fact_KpiTargets": 336
+  },
+  "generated_at_utc": "2026-09-20T03:09:17+00:00"
+}

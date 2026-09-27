@@ -1,0 +1,67 @@
+table Dim_Defect
+	lineageTag: 0ead0328-5bfe-4355-9bd7-981a9b31114a
+
+	column DefectKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 2ea7b0ae-9561-4166-acf9-9dca45fb75a8
+		summarizeBy: none
+		sourceColumn: DefectKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DefectCode
+		dataType: string
+		lineageTag: fe67ea42-cfb3-4ce7-9b32-0da587508b83
+		summarizeBy: none
+		sourceColumn: DefectCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column DefectName
+		dataType: string
+		lineageTag: c65cefee-d6ff-45d6-b729-c0df84ba53fd
+		summarizeBy: none
+		sourceColumn: DefectName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 3b42b178-9bcd-4c2c-b91a-aa8dbafe2808
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Severity
+		dataType: string
+		lineageTag: b9b0a759-7e96-47c8-ae26-e05e1ee4ca60
+		summarizeBy: none
+		sourceColumn: Severity
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Defect = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Dim_Defect = Source{[Item = "Dim_Defect", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Dim_Defect,
+				        {
+				            {"DefectKey", Int64.Type},
+				            {"DefectCode", type text},
+				            {"DefectName", type text},
+				            {"Category", type text},
+				            {"Severity", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

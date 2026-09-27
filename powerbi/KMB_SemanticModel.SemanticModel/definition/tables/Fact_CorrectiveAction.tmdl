@@ -1,0 +1,156 @@
+table Fact_CorrectiveAction
+	lineageTag: ab4c9117-e7d9-4600-a591-3a0d676641b8
+
+	measure 'Corrective Actions' =
+			
+			COUNTROWS ( Fact_CorrectiveAction )
+		formatString: #,0
+		lineageTag: 314a5e5d-a7ad-4031-96b7-aa6c18949815
+
+	measure 'Open Corrective Actions' =
+			CALCULATE (
+			    [Corrective Actions],
+			    Fact_CorrectiveAction[Status] = "Open",
+			    REMOVEFILTERS ( Dim_Date )
+			)
+		formatString: #,0
+		lineageTag: b32655af-8dfe-4faf-a557-a12137d7447f
+
+	measure 'Corrective Action On-Time %' =
+			VAR SelectedDates = VALUES ( Dim_Date[Date] )
+			VAR ActionsInSelectedScope =
+			    CALCULATETABLE (
+			        Fact_CorrectiveAction,
+			        REMOVEFILTERS ( Dim_Date )
+			    )
+			VAR ClosedActions =
+			    FILTER (
+			        ActionsInSelectedScope,
+			        Fact_CorrectiveAction[Status] = "Closed"
+			            && CONTAINS (
+			                SelectedDates,
+			                Dim_Date[Date],
+			                Fact_CorrectiveAction[DueDate]
+			            )
+			    )
+			VAR ClosedOnTime =
+			    FILTER (
+			        ClosedActions,
+			        Fact_CorrectiveAction[CompletionDate] <= Fact_CorrectiveAction[DueDate]
+			    )
+			RETURN
+			    DIVIDE ( COUNTROWS ( ClosedOnTime ), COUNTROWS ( ClosedActions ) )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2491dfac-7ebf-4af5-ab3b-b65138783485
+
+	column ActionKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 02f66e4b-2690-4f12-8f38-0f799ac1ed7e
+		summarizeBy: count
+		sourceColumn: ActionKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column MRBCaseKey
+		dataType: int64
+		formatString: 0
+		lineageTag: d026dcd3-9785-475f-becb-79480fba0300
+		summarizeBy: none
+		sourceColumn: MRBCaseKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 7dd32a28-7220-416f-9da6-10bcf1fbf2cd
+		summarizeBy: none
+		sourceColumn: OpenDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column DueDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: da59667a-016c-47e6-8572-ad68d1a23cea
+		summarizeBy: none
+		sourceColumn: DueDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column CompletionDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 04f9636d-757d-42af-9589-58c0a1fb9392
+		summarizeBy: none
+		sourceColumn: CompletionDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column OwnerDepartment
+		dataType: string
+		lineageTag: 28a16a76-b7e1-4232-9dc7-042c2cfac742
+		summarizeBy: none
+		sourceColumn: OwnerDepartment
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: 9aa1b8bb-169b-48ac-bf10-7637005e0d4f
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column EffectivenessVerified
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: b0fef820-2c61-44d9-833d-0575678e9d47
+		summarizeBy: none
+		sourceColumn: EffectivenessVerified
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		lineageTag: 5c76289e-face-46cc-ab82-902f2244927c
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_CorrectiveAction = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Fact_CorrectiveAction = Source{[Item = "Fact_CorrectiveAction", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Fact_CorrectiveAction,
+				        {
+				            {"ActionKey", Int64.Type},
+				            {"MRBCaseKey", Int64.Type},
+				            {"OpenDate", type date},
+				            {"DueDate", type date},
+				            {"CompletionDate", type date},
+				            {"OwnerDepartment", type text},
+				            {"Status", type text},
+				            {"EffectivenessVerified", type logical},
+				            {"DataSource", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

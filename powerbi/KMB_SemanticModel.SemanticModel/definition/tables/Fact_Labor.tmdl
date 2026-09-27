@@ -1,0 +1,127 @@
+table Fact_Labor
+	lineageTag: a984a058-6705-4f96-a0b5-caffa05d149e
+
+	measure 'Regular Hours' =
+			
+			SUM ( Fact_Labor[RegularHours] )
+		formatString: #,0.00
+		lineageTag: d07cd858-ede1-45d3-b98e-5e5afb7ef8e9
+
+	measure 'Overtime Hours' =
+			
+			SUM ( Fact_Labor[OvertimeHours] )
+		formatString: #,0.00
+		lineageTag: eeb7ffe1-a68f-45aa-915e-91ffb8d065f5
+
+	measure 'Absence Hours' =
+			
+			SUM ( Fact_Labor[AbsenceHours] )
+		formatString: #,0.00
+		lineageTag: 4fa7513a-697a-4463-a4f0-a8e1e781af3c
+
+	measure 'Total Worked Hours' =
+			
+			[Regular Hours] + [Overtime Hours]
+		formatString: #,0.00
+		lineageTag: 55dcc276-54ec-4a04-b97c-833a62eaddbc
+
+	column LaborRecordKey
+		dataType: int64
+		formatString: 0
+		lineageTag: dba4f9f5-776b-473d-a30b-7493627ee43a
+		summarizeBy: count
+		sourceColumn: LaborRecordKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: int64
+		formatString: 0
+		lineageTag: cde1261b-0f5c-479a-8834-72027889283c
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmployeeKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 63cc1e07-7581-4a5a-bd10-ffcde8f09cdd
+		summarizeBy: none
+		sourceColumn: EmployeeKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkCenterKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 4d4aca18-0447-4fb9-b5f5-702137ca55f1
+		summarizeBy: none
+		sourceColumn: WorkCenterKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegularHours
+		dataType: double
+		lineageTag: ddd4e2e1-3f8b-4a59-890b-b693bb8305db
+		summarizeBy: sum
+		sourceColumn: RegularHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column OvertimeHours
+		dataType: double
+		lineageTag: 2b8f71c2-d7b1-4f11-9829-1c8261af473d
+		summarizeBy: sum
+		sourceColumn: OvertimeHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column AbsenceHours
+		dataType: double
+		lineageTag: 32ebebd0-5068-4114-a6da-50ff6e71aa8c
+		summarizeBy: sum
+		sourceColumn: AbsenceHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataSource
+		dataType: string
+		lineageTag: 1526e9e9-d0eb-41d9-9462-a10a16634fc5
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Labor = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Fact_Labor = Source{[Item = "Fact_Labor", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Fact_Labor,
+				        {
+				            {"LaborRecordKey", Int64.Type},
+				            {"DateKey", Int64.Type},
+				            {"EmployeeKey", Int64.Type},
+				            {"WorkCenterKey", Int64.Type},
+				            {"RegularHours", type number},
+				            {"OvertimeHours", type number},
+				            {"AbsenceHours", type number},
+				            {"DataSource", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

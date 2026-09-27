@@ -1,0 +1,269 @@
+table Fact_MRB
+	lineageTag: c20a5db4-3970-4c35-b01d-ffd01a9d81eb
+
+	measure 'MRB Cases' =
+			
+			COUNTROWS ( Fact_MRB )
+		formatString: #,0
+		lineageTag: d303e861-dc76-42c1-a482-ece07d6788a2
+
+	measure 'Open MRB Cases' =
+			
+			CALCULATE ( [MRB Cases], Fact_MRB[Status] = "Open" )
+		formatString: #,0
+		lineageTag: e380eef6-7ddb-4275-a9bc-76af6e98b175
+
+	measure 'MRB Material Cost' =
+			
+			SUM ( Fact_MRB[MaterialCost] )
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: b4b5670e-eec6-4077-8c41-7dbcff4c1778
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	measure 'MRB Closure Rate %' =
+			
+			DIVIDE (
+			    CALCULATE ( [MRB Cases], Fact_MRB[Status] = "Closed" ),
+			    [MRB Cases]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: c8936c83-7b78-4685-9724-5eba336fad2c
+
+	measure 'Model Data-Through Date' =
+			
+			CALCULATE ( MAX ( Dim_Date[Date] ), ALL ( Dim_Date ) )
+		formatString: mmmm d\, yyyy
+		lineageTag: 96084e26-48b2-4a0c-b796-381862517925
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	measure 'MRB Aging >30 Days' =
+			
+			VAR DataThroughDate = [Model Data-Through Date]
+			RETURN
+			    CALCULATE (
+			        [MRB Cases],
+			        Fact_MRB[Status] = "Open",
+			        FILTER (
+			            Fact_MRB,
+			            DATEDIFF ( Fact_MRB[OpenDate], DataThroughDate, DAY ) > 30
+			        )
+			    )
+		formatString: #,0
+		lineageTag: 04436437-be39-4668-8e88-305ac7522fe5
+
+	measure 'Closed MRB Cases' =
+			
+			CALCULATE ( [MRB Cases], Fact_MRB[Status] = "Closed" )
+		formatString: #,0
+		lineageTag: ca42b6b1-9b6f-424e-9106-ba117c3f3af4
+
+	measure 'Advanced Open MRB Cases Current' = CALCULATE ( [Open MRB Cases], REMOVEFILTERS ( Dim_Date ) )
+		formatString: #,0
+		lineageTag: e6ddf2c4-62e7-4849-ac52-f17d7f7a656f
+
+	measure 'Open MRB Cases As Of Date' =
+			VAR AsOfDate = MAX ( Dim_Date[Date] )
+			VAR MRBInSelectedScope =
+			    CALCULATETABLE (
+			        Fact_MRB,
+			        REMOVEFILTERS ( Dim_Date )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( AsOfDate ),
+			        BLANK (),
+			        COUNTROWS (
+			            FILTER (
+			                MRBInSelectedScope,
+			                Fact_MRB[OpenDate] <= AsOfDate
+			                    && ( ISBLANK ( Fact_MRB[CloseDate] ) || Fact_MRB[CloseDate] > AsOfDate )
+			            )
+			        )
+			    )
+		formatString: #,0
+		lineageTag: a4e07f93-6ab7-49f5-8eac-14042792ff28
+
+	measure 'MRB Aging >30 Days As Of Date' =
+			VAR AsOfDate = MAX ( Dim_Date[Date] )
+			VAR MRBInSelectedScope =
+			    CALCULATETABLE (
+			        Fact_MRB,
+			        REMOVEFILTERS ( Dim_Date )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( AsOfDate ),
+			        BLANK (),
+			        COUNTROWS (
+			            FILTER (
+			                MRBInSelectedScope,
+			                Fact_MRB[OpenDate] <= AsOfDate - 30
+			                    && ( ISBLANK ( Fact_MRB[CloseDate] ) || Fact_MRB[CloseDate] > AsOfDate )
+			            )
+			        )
+			    )
+		formatString: #,0
+		lineageTag: 8a561b51-fb48-4a53-a696-a02508f7cf98
+
+	measure 'Advanced MRB Aging >30 Current' = CALCULATE ( [MRB Aging >30 Days], REMOVEFILTERS ( Dim_Date ) )
+		formatString: #,0
+		lineageTag: f06ffda4-67d2-4864-ae87-0b3b7098226b
+
+	measure 'Advanced Open MRB Context' =
+			VAR AgingCases = [Advanced MRB Aging >30 Current]
+			RETURN
+			    IF ( ISBLANK ( AgingCases ), "Aging not available", FORMAT ( AgingCases, "#,0" ) & " older than 30 days" )
+		lineageTag: ccaf49b0-2eb4-4ab3-9f72-41ca3c007e23
+
+	column MRBCaseKey
+		dataType: int64
+		formatString: 0
+		lineageTag: ae37ef05-286d-40e7-9831-7a6fac865fea
+		summarizeBy: none
+		sourceColumn: MRBCaseKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 3c06c895-7c55-42fc-9f2c-fb21b0bf831d
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e8445e8-e150-4fc2-b8ab-7bfa3da9c507
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkCenterKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 00d4f2d3-1107-4d69-b42b-c375875f00fc
+		summarizeBy: none
+		sourceColumn: WorkCenterKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 17c6f488-4e8f-4422-a12f-5f5d457cce12
+		summarizeBy: none
+		sourceColumn: SupplierKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DefectKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 80a6953b-9696-4fd2-9bf3-7fea8b02cc14
+		summarizeBy: none
+		sourceColumn: DefectKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: e0028346-cb15-4bc0-a433-561a5e487857
+		summarizeBy: none
+		sourceColumn: OpenDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column CloseDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: e35fc390-a9e8-49b5-b11c-d942c8e7a7fe
+		summarizeBy: none
+		sourceColumn: CloseDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Quantity
+		dataType: int64
+		formatString: 0
+		lineageTag: 78cbbecc-8a42-4544-a37e-5d18067f3431
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaterialCost
+		dataType: double
+		lineageTag: 7d221ba2-e3e2-488a-b547-9c22affc8368
+		summarizeBy: sum
+		sourceColumn: MaterialCost
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Disposition
+		dataType: string
+		lineageTag: 17944fcd-657c-44fc-ac3a-9c662e3a153d
+		summarizeBy: none
+		sourceColumn: Disposition
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: 04c51f62-55e5-4b01-9248-8391a4fceefd
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		lineageTag: 4d08a97d-094f-48dc-a923-900cd86115a0
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_MRB = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Fact_MRB = Source{[Item = "Fact_MRB", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Fact_MRB,
+				        {
+				            {"MRBCaseKey", Int64.Type},
+				            {"DateKey", Int64.Type},
+				            {"ProductKey", Int64.Type},
+				            {"WorkCenterKey", Int64.Type},
+				            {"SupplierKey", Int64.Type},
+				            {"DefectKey", Int64.Type},
+				            {"OpenDate", type date},
+				            {"CloseDate", type date},
+				            {"Quantity", Int64.Type},
+				            {"MaterialCost", type number},
+				            {"Disposition", type text},
+				            {"Status", type text},
+				            {"DataSource", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

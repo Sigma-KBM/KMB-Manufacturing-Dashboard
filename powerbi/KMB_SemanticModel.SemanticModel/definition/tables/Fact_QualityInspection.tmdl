@@ -1,0 +1,473 @@
+table Fact_QualityInspection
+	lineageTag: b2804a3c-ed9a-4ad3-9038-e3a36f64969b
+
+	measure 'Inspected Quantity' =
+			
+			SUM ( Fact_QualityInspection[InspectedQty] )
+		formatString: #,0
+		lineageTag: 28648c7a-50ad-4e68-8c43-5baa474d6c1d
+
+	measure 'Defect Quantity' =
+			
+			SUM ( Fact_QualityInspection[DefectQty] )
+		formatString: #,0
+		lineageTag: 3a5a9142-c0fc-4e78-87eb-68b6fab20989
+
+	measure 'Defects per 1K Units' =
+			
+			DIVIDE ( [Defect Quantity], [Inspected Quantity] ) * 1000
+		formatString: 0.0
+		lineageTag: f5b58734-ef6a-48e3-bc62-d87c03199f9f
+
+	measure 'Advanced Target Weight' =
+			VAR KPIName = CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			RETURN
+			    SWITCH (
+			        KPIName,
+			        "Defects per 1K Units", [Inspected Quantity],
+			        "First Pass Yield %", [Produced Quantity],
+			        "Cost of Poor Quality %", [Production Value],
+			        BLANK ()
+			    )
+		formatString: #,0
+		lineageTag: 26f34379-714b-4e79-9dd3-93484f516cbb
+
+	measure 'Advanced Target Direction' =
+			VAR KPIName = CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			RETURN
+			    CALCULATE (
+			        SELECTEDVALUE ( Fact_KpiTargets[Direction] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        REMOVEFILTERS ( Fact_KpiTargets ),
+			        Fact_KpiTargets[KPIName] = KPIName,
+			        Fact_KpiTargets[ScopeType] = "Enterprise",
+			        Fact_KpiTargets[ScopeKey] = "KMB",
+			        Fact_KpiTargets[IsActive] = TRUE ()
+			    )
+		lineageTag: 903d6d92-a26c-4d8b-8a4b-aa4210e1ce68
+
+	measure 'Advanced Governing Target' =
+			VAR KPIName = CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR TotalWeight =
+			    SUMX ( VALUES ( Dim_Date[Date] ), CALCULATE ( [Advanced Target Weight] ) )
+			VAR WeightedTarget =
+			    SUMX (
+			        VALUES ( Dim_Date[Date] ),
+			        VAR CurrentDate = Dim_Date[Date]
+			        VAR MonthStart = DATE ( YEAR ( CurrentDate ), MONTH ( CurrentDate ), 1 )
+			        VAR DayWeight = CALCULATE ( [Advanced Target Weight] )
+			        VAR MonthTarget =
+			            CALCULATE (
+			                MAX ( Fact_KpiTargets[TargetValue] ),
+			                REMOVEFILTERS ( Dim_Date ),
+			                REMOVEFILTERS ( Fact_KpiTargets ),
+			                Fact_KpiTargets[KPIName] = KPIName,
+			                Fact_KpiTargets[ScopeType] = "Enterprise",
+			                Fact_KpiTargets[ScopeKey] = "KMB",
+			                Fact_KpiTargets[PeriodStart] = MonthStart,
+			                Fact_KpiTargets[IsActive] = TRUE ()
+			            )
+			        RETURN
+			            DayWeight * MonthTarget
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( KPIName ) || ISBLANK ( TotalWeight ) || TotalWeight = 0,
+			        BLANK (),
+			        DIVIDE ( WeightedTarget, TotalWeight )
+			    )
+		formatString: 0.0
+		lineageTag: 07f3e58f-585c-4d59-8ace-6fb434a6cdb5
+
+	measure 'Advanced Governing Watch Threshold' =
+			VAR KPIName = CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR TotalWeight =
+			    SUMX ( VALUES ( Dim_Date[Date] ), CALCULATE ( [Advanced Target Weight] ) )
+			VAR WeightedThreshold =
+			    SUMX (
+			        VALUES ( Dim_Date[Date] ),
+			        VAR CurrentDate = Dim_Date[Date]
+			        VAR MonthStart = DATE ( YEAR ( CurrentDate ), MONTH ( CurrentDate ), 1 )
+			        VAR DayWeight = CALCULATE ( [Advanced Target Weight] )
+			        VAR MonthTarget =
+			            CALCULATE (
+			                MAX ( Fact_KpiTargets[TargetValue] ),
+			                REMOVEFILTERS ( Dim_Date ),
+			                REMOVEFILTERS ( Fact_KpiTargets ),
+			                Fact_KpiTargets[KPIName] = KPIName,
+			                Fact_KpiTargets[ScopeType] = "Enterprise",
+			                Fact_KpiTargets[ScopeKey] = "KMB",
+			                Fact_KpiTargets[PeriodStart] = MonthStart,
+			                Fact_KpiTargets[IsActive] = TRUE ()
+			            )
+			        VAR RedTolerance =
+			            CALCULATE (
+			                MAX ( Fact_KpiTargets[RedTolerancePct] ),
+			                REMOVEFILTERS ( Dim_Date ),
+			                REMOVEFILTERS ( Fact_KpiTargets ),
+			                Fact_KpiTargets[KPIName] = KPIName,
+			                Fact_KpiTargets[ScopeType] = "Enterprise",
+			                Fact_KpiTargets[ScopeKey] = "KMB",
+			                Fact_KpiTargets[PeriodStart] = MonthStart,
+			                Fact_KpiTargets[IsActive] = TRUE ()
+			            )
+			        VAR Direction =
+			            CALCULATE (
+			                SELECTEDVALUE ( Fact_KpiTargets[Direction] ),
+			                REMOVEFILTERS ( Dim_Date ),
+			                REMOVEFILTERS ( Fact_KpiTargets ),
+			                Fact_KpiTargets[KPIName] = KPIName,
+			                Fact_KpiTargets[ScopeType] = "Enterprise",
+			                Fact_KpiTargets[ScopeKey] = "KMB",
+			                Fact_KpiTargets[PeriodStart] = MonthStart,
+			                Fact_KpiTargets[IsActive] = TRUE ()
+			            )
+			        VAR Threshold =
+			            SWITCH (
+			                Direction,
+			                "LowerIsBetter", MonthTarget * ( 1 + RedTolerance ),
+			                "HigherIsBetter", MonthTarget * ( 1 - RedTolerance ),
+			                BLANK ()
+			            )
+			        RETURN
+			            DayWeight * Threshold
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( KPIName ) || ISBLANK ( TotalWeight ) || TotalWeight = 0,
+			        BLANK (),
+			        DIVIDE ( WeightedThreshold, TotalWeight )
+			    )
+		formatString: 0.0
+		lineageTag: 66085db2-2299-4a71-bbd4-08c462e6a313
+
+	measure 'Advanced KPI Status Label' =
+			VAR ActualValue = [Selected KPI Actual]
+			VAR TargetValue = [Advanced Governing Target]
+			VAR WatchThreshold = [Advanced Governing Watch Threshold]
+			VAR Direction = [Advanced Target Direction]
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ) || ISBLANK ( TargetValue ) || ISBLANK ( WatchThreshold ) || ISBLANK ( Direction ),
+			        "Not Available",
+			        SWITCH (
+			            Direction,
+			            "HigherIsBetter", IF ( ActualValue >= TargetValue, "On Target", IF ( ActualValue >= WatchThreshold, "Watch", "Off Target" ) ),
+			            "LowerIsBetter", IF ( ActualValue <= TargetValue, "On Target", IF ( ActualValue <= WatchThreshold, "Watch", "Off Target" ) ),
+			            "Not Available"
+			        )
+			    )
+		lineageTag: d52a8352-706d-4aca-8173-69ab05894006
+
+	measure 'Advanced KPI Status Icon' = SWITCH ( [Advanced KPI Status Label], "On Target", "✓", "Watch", "!", "Off Target", "×", "—" )
+		lineageTag: 36dfd3fe-c326-4450-adde-04a5757b7a8a
+
+	measure 'Advanced KPI Status Display' = [Advanced KPI Status Icon] & " " & [Advanced KPI Status Label]
+		lineageTag: 381b9e10-2522-4b10-8b8a-5fafa18c18c4
+
+	measure 'Advanced KPI Status Color' =
+			SWITCH (
+			    [Advanced KPI Status Label],
+			    "On Target", "#218C74",
+			    "Watch", "#D97706",
+			    "Off Target", "#C73E3A",
+			    "#64748B"
+			)
+		lineageTag: 77be4071-b7e0-4c6f-b542-b1d4030d6cc6
+
+	measure 'Advanced KPI Card Background Color' =
+			SWITCH (
+			    [Advanced KPI Status Label],
+			    "On Target", "#EAF7F1",
+			    "Watch", "#FFF7E6",
+			    "Off Target", "#FDEDEE",
+			    "#F1F5F9"
+			)
+		lineageTag: f93e53fe-8807-4448-9ea3-2c6cd4348c9c
+
+	measure 'Advanced Target Display' =
+			VAR KPIName = CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR TargetValue = [Advanced Governing Target]
+			VAR DisplayValue =
+			    SWITCH (
+			        KPIName,
+			        "Defects per 1K Units", FORMAT ( TargetValue, "0.0" ),
+			        "First Pass Yield %", FORMAT ( TargetValue, "0.0%" ),
+			        "Cost of Poor Quality %", FORMAT ( TargetValue, "0.0%" ),
+			        FORMAT ( TargetValue, "#,0.0" )
+			    )
+			RETURN
+			    IF ( ISBLANK ( TargetValue ), "Enterprise target: —", "Enterprise target: " & DisplayValue )
+		lineageTag: 89bae9b9-bb6d-4e1c-b685-fd0b295f2c40
+
+	measure 'Advanced Card Background Placeholder' = BLANK ()
+		lineageTag: 24ba95ea-a74b-4bf2-978a-d9e44d983a53
+
+	measure 'Advanced Defect Weekly Target' =
+			CALCULATE (
+			    [Advanced Governing Target],
+			    REMOVEFILTERS ( Fact_KpiTargets[KPIName] ),
+			    Fact_KpiTargets[KPIName] = "Defects per 1K Units"
+			)
+		formatString: 0.0
+		lineageTag: 6e7943e2-d1bd-47b6-ac3e-8587fc34802b
+
+	measure 'Advanced Defect Weekly Status Label' =
+			VAR ActualValue = [Defects per 1K Units]
+			VAR TargetValue = [Advanced Defect Weekly Target]
+			VAR WatchThreshold =
+			    CALCULATE (
+			        [Advanced Governing Watch Threshold],
+			        REMOVEFILTERS ( Fact_KpiTargets[KPIName] ),
+			        Fact_KpiTargets[KPIName] = "Defects per 1K Units"
+			    )
+			VAR Direction =
+			    CALCULATE (
+			        [Advanced Target Direction],
+			        REMOVEFILTERS ( Fact_KpiTargets[KPIName] ),
+			        Fact_KpiTargets[KPIName] = "Defects per 1K Units"
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ) || ISBLANK ( TargetValue ) || ISBLANK ( WatchThreshold ) || ISBLANK ( Direction ),
+			        "Not Available",
+			        SWITCH (
+			            Direction,
+			            "HigherIsBetter", IF ( ActualValue >= TargetValue, "On Target", IF ( ActualValue >= WatchThreshold, "Watch", "Off Target" ) ),
+			            "LowerIsBetter", IF ( ActualValue <= TargetValue, "On Target", IF ( ActualValue <= WatchThreshold, "Watch", "Off Target" ) ),
+			            "Not Available"
+			        )
+			    )
+		lineageTag: 7fe858ac-0a20-4f57-a238-ef2e53558d85
+
+	measure 'Advanced Defect Variance to Target' = [Defects per 1K Units] - [Advanced Defect Weekly Target]
+		formatString: 0.0
+		lineageTag: 0074dc1a-941f-4c1b-97c8-975ff09ed63b
+
+	measure 'Advanced Inspected Context' =
+			VAR Inspected = [Inspected Quantity]
+			RETURN
+			    IF ( ISBLANK ( Inspected ), "No inspected units in selected scope", "From " & FORMAT ( Inspected, "#,0" ) & " inspected units" )
+		lineageTag: 6d4c577c-5430-4d8a-977a-80041bbedda7
+
+	measure 'Advanced Selected Product Family Tooltip' =
+			VAR SelectedFamily = SELECTEDVALUE ( Dim_Product[ProductFamily] )
+			RETURN
+			    IF ( ISBLANK ( SelectedFamily ), "All product families", SelectedFamily )
+		lineageTag: e81b6be3-7ca3-4fbe-b9a1-eaf2e1d7c18c
+
+	measure 'Defect Recurrence Rate %' =
+			VAR DefectEvents =
+			    FILTER (
+			        Fact_QualityInspection,
+			        Fact_QualityInspection[DefectQty] > 0
+			    )
+			VAR RepeatedEvents =
+			    FILTER (
+			        DefectEvents,
+			        VAR CurrentInspectionKey = Fact_QualityInspection[InspectionKey]
+			        VAR CurrentProductKey = Fact_QualityInspection[ProductKey]
+			        VAR CurrentWorkCenterKey = Fact_QualityInspection[WorkCenterKey]
+			        VAR CurrentDefectKey = Fact_QualityInspection[DefectKey]
+			        VAR PriorMatchingEvents =
+			            COUNTROWS (
+			                FILTER (
+			                    ALL ( Fact_QualityInspection ),
+			                    Fact_QualityInspection[DefectQty] > 0
+			                        && Fact_QualityInspection[ProductKey] = CurrentProductKey
+			                        && Fact_QualityInspection[WorkCenterKey] = CurrentWorkCenterKey
+			                        && Fact_QualityInspection[DefectKey] = CurrentDefectKey
+			                        && Fact_QualityInspection[InspectionKey] < CurrentInspectionKey
+			                )
+			            )
+			        RETURN
+			            PriorMatchingEvents > 0
+			    )
+			RETURN
+			    DIVIDE ( COUNTROWS ( RepeatedEvents ), COUNTROWS ( DefectEvents ) )
+		formatString: 0.0%
+		lineageTag: f8393ad6-52dc-4cc0-8eeb-7f23ac85ac2a
+
+	measure 'Advanced Pareto Top 6 Flag' =
+			VAR CurrentDefect = SELECTEDVALUE ( Dim_Defect[DefectName] )
+			VAR TopDefects =
+			    TOPN (
+			        6,
+			        ALLSELECTED ( Dim_Defect[DefectName] ),
+			        CALCULATE ( [Defect Quantity] ), DESC,
+			        Dim_Defect[DefectName], ASC
+			    )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( CurrentDefect )
+			            && CONTAINS ( TopDefects, Dim_Defect[DefectName], CurrentDefect ),
+			        1
+			    )
+		formatString: 0
+		lineageTag: b19dfa1d-d570-47ad-91d0-7d7189f65ebb
+
+	measure 'Advanced Pareto Top 3 Share' =
+			VAR SelectedDefects = ALLSELECTED ( Dim_Defect[DefectName] )
+			VAR TopDefects =
+			    TOPN (
+			        3,
+			        SelectedDefects,
+			        CALCULATE ( [Defect Quantity] ), DESC,
+			        Dim_Defect[DefectName], ASC
+			    )
+			VAR TotalDefects = CALCULATE ( [Defect Quantity], SelectedDefects )
+			VAR TopDefectQuantity = CALCULATE ( [Defect Quantity], KEEPFILTERS ( TopDefects ) )
+			RETURN
+			    DIVIDE ( TopDefectQuantity, TotalDefects )
+		formatString: 0.0%
+		lineageTag: 8e55205e-6031-4af3-a1de-daaf010b4233
+
+	measure 'Advanced Pareto Top 3 Text' =
+			VAR ShareValue = [Advanced Pareto Top 3 Share]
+			RETURN
+			    IF ( ISBLANK ( ShareValue ), "Top 3 share not available", "Top 3 = " & FORMAT ( ShareValue, "0.0%" ) & " of selected defects" )
+		lineageTag: 8977ae4c-0801-46ce-82d6-2f44ad709b20
+
+	measure 'Advanced Heatmap Color' =
+			VAR RateValue = [Defects per 1K Units]
+			VAR TargetValue = [Advanced Defect Weekly Target]
+			VAR StatusLabel = [Advanced Defect Weekly Status Label]
+			VAR TargetRatio = DIVIDE ( RateValue, TargetValue )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( RateValue ), "#F1F5F9",
+			        StatusLabel = "On Target", "#218C74",
+			        StatusLabel = "Watch", "#D97706",
+			        StatusLabel = "Off Target" && TargetRatio <= 1.5, "#E76F6A",
+			        StatusLabel = "Off Target" && TargetRatio <= 2.0, "#C73E3A",
+			        StatusLabel = "Off Target", "#8F1D1D",
+			        "#CBD5E1"
+			    )
+		lineageTag: d1c94aed-4046-4ede-8f25-cd56b57adaa9
+
+	measure 'Advanced Heatmap Value Display' =
+			VAR RateValue = [Defects per 1K Units]
+			RETURN
+			    IF ( ISBLANK ( RateValue ), "N/A", FORMAT ( RateValue, "0.0" ) )
+		lineageTag: 8eaa71f4-9c2d-4692-b2c0-7a92d6c78473
+
+	measure 'Advanced Heatmap Font Color' = IF ( ISBLANK ( [Defects per 1K Units] ), "#64748B", "#FFFFFF" )
+		lineageTag: 4500062a-22b3-4c41-9da6-1f546fe7b768
+
+	column InspectionKey
+		dataType: int64
+		formatString: 0
+		lineageTag: e76489f6-1d28-4392-a2dd-fa822382afcb
+		summarizeBy: count
+		sourceColumn: InspectionKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductionEventKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 9d4b6139-b5cf-4f02-95c9-cd9300f7d1de
+		summarizeBy: count
+		sourceColumn: ProductionEventKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: int64
+		formatString: 0
+		lineageTag: c6d23056-9eec-460e-8680-fe22b24824b5
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 9b41bd9a-fa73-4321-a042-626ae1ce025b
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkCenterKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 3bd13c38-98f4-4555-ba41-87a8baba49a3
+		summarizeBy: none
+		sourceColumn: WorkCenterKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DefectKey
+		dataType: int64
+		formatString: 0
+		lineageTag: cb354e52-e62c-48eb-b1dc-008f0670acda
+		summarizeBy: none
+		sourceColumn: DefectKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column InspectedQty
+		dataType: int64
+		formatString: 0
+		lineageTag: 135449e6-7664-4b43-b7e7-a0b807880c79
+		summarizeBy: sum
+		sourceColumn: InspectedQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column DefectQty
+		dataType: int64
+		formatString: 0
+		lineageTag: 836a4d30-040b-46d9-8ce4-549351e52749
+		summarizeBy: sum
+		sourceColumn: DefectQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column InspectionResult
+		dataType: string
+		lineageTag: 3316f1ae-2052-4823-b78e-7d902d3920bb
+		summarizeBy: none
+		sourceColumn: InspectionResult
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		lineageTag: 6db54be9-a240-46f6-b0b4-3a1b67c6bec4
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_QualityInspection = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Fact_QualityInspection = Source{[Item = "Fact_QualityInspection", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Fact_QualityInspection,
+				        {
+				            {"InspectionKey", Int64.Type},
+				            {"ProductionEventKey", Int64.Type},
+				            {"DateKey", Int64.Type},
+				            {"ProductKey", Int64.Type},
+				            {"WorkCenterKey", Int64.Type},
+				            {"DefectKey", Int64.Type},
+				            {"InspectedQty", Int64.Type},
+				            {"DefectQty", Int64.Type},
+				            {"InspectionResult", type text},
+				            {"DataSource", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

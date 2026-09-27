@@ -1,0 +1,161 @@
+table Fact_Training
+	lineageTag: 1f7a2478-7306-49b3-99b3-8b104ad0ace3
+
+	measure 'Training Assignments' =
+			
+			COUNTROWS ( Fact_Training )
+		formatString: #,0
+		lineageTag: c2ee5f9d-101a-45f4-b616-09fef36ec822
+
+	measure 'Completed Training' =
+			VAR SelectedDates = VALUES ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        [Training Assignments],
+			        Fact_Training[Status] = "Completed",
+			        TREATAS ( SelectedDates, Fact_Training[DueDate] )
+			    )
+		formatString: #,0
+		lineageTag: 137f7702-a4e7-4f16-b9e3-f0d5283c5d38
+
+	measure 'Training Compliance %' =
+			VAR SelectedDates = VALUES ( Dim_Date[Date] )
+			VAR DueAssignments =
+			    CALCULATE (
+			        [Training Assignments],
+			        TREATAS ( SelectedDates, Fact_Training[DueDate] )
+			    )
+			RETURN
+			    DIVIDE ( [Completed Training], DueAssignments )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 89611493-f7f4-439d-854c-8f0ca6249d2d
+
+	measure 'Training On-Time %' =
+			VAR SelectedDates = VALUES ( Dim_Date[Date] )
+			VAR CompletedOnTime =
+			    CALCULATE (
+			        [Training Assignments],
+			        Fact_Training[Status] = "Completed",
+			        TREATAS ( SelectedDates, Fact_Training[DueDate] ),
+			        FILTER (
+			            Fact_Training,
+			            Fact_Training[CompletionDate] <= Fact_Training[DueDate]
+			        )
+			    )
+			RETURN
+			    DIVIDE ( CompletedOnTime, [Completed Training] )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 2a844848-fe95-4d03-af1f-bff69d9facb2
+
+	column TrainingRecordKey
+		dataType: int64
+		formatString: 0
+		lineageTag: d72a1646-7c68-413a-96a3-f8d979cbf43f
+		summarizeBy: count
+		sourceColumn: TrainingRecordKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmployeeKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 9280cf8b-368f-439e-9530-eaab015314e7
+		summarizeBy: none
+		sourceColumn: EmployeeKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column CourseName
+		dataType: string
+		lineageTag: d67aa391-7f1c-4eb2-8d6d-4946e45d6dbc
+		summarizeBy: none
+		sourceColumn: CourseName
+
+		annotation SummarizationSetBy = Automatic
+
+	column AssignmentDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 330c71bc-9f5a-4e62-a120-c54ea8c4d996
+		summarizeBy: none
+		sourceColumn: AssignmentDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column DueDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2f589561-f077-456f-b87d-d489089a0af7
+		summarizeBy: none
+		sourceColumn: DueDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column CompletionDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 37f12312-4df8-4738-9541-79e310138ba3
+		summarizeBy: none
+		sourceColumn: CompletionDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Status
+		dataType: string
+		lineageTag: 2b8ef8a9-c31f-4bec-8a27-3362ec4487d4
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column ScorePct
+		dataType: double
+		lineageTag: 94cf7add-b96c-4221-afd0-74a26a7d5e0f
+		summarizeBy: sum
+		sourceColumn: ScorePct
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataSource
+		dataType: string
+		lineageTag: bd6de006-bdec-412f-82ae-b61c03102a10
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Training = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Fact_Training = Source{[Item = "Fact_Training", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Fact_Training,
+				        {
+				            {"TrainingRecordKey", Int64.Type},
+				            {"EmployeeKey", Int64.Type},
+				            {"CourseName", type text},
+				            {"AssignmentDate", type date},
+				            {"DueDate", type date},
+				            {"CompletionDate", type date},
+				            {"Status", type text},
+				            {"ScorePct", type number},
+				            {"DataSource", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

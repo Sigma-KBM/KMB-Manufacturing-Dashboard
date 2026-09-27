@@ -1,0 +1,98 @@
+table Dim_Employee
+	lineageTag: f1c27720-366f-4b74-a890-f8676c78f9a5
+
+	column EmployeeKey
+		dataType: int64
+		formatString: 0
+		lineageTag: b2cee70d-74ee-489f-b1ef-fad6e2bef54b
+		summarizeBy: none
+		sourceColumn: EmployeeKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmployeeCode
+		dataType: string
+		lineageTag: 65a46d3b-714c-41f5-bb66-eb47b2a4a691
+		summarizeBy: none
+		sourceColumn: EmployeeCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column EmployeeName
+		dataType: string
+		lineageTag: 82452a04-688c-48ea-ae51-445362185f4a
+		summarizeBy: none
+		sourceColumn: EmployeeName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Role
+		dataType: string
+		lineageTag: 893b2887-840a-4f81-bd55-ebda418b66aa
+		summarizeBy: none
+		sourceColumn: Role
+
+		annotation SummarizationSetBy = Automatic
+
+	column Department
+		dataType: string
+		lineageTag: d84c208a-7308-4adc-8e18-23fa1ebe7165
+		summarizeBy: none
+		sourceColumn: Department
+
+		annotation SummarizationSetBy = Automatic
+
+	column Shift
+		dataType: string
+		lineageTag: ce453ba0-22dc-4065-8777-0a09d66018a4
+		summarizeBy: none
+		sourceColumn: Shift
+
+		annotation SummarizationSetBy = Automatic
+
+	column HireDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: daa5c0be-f28d-44c4-9b58-cc22e327ce14
+		summarizeBy: none
+		sourceColumn: HireDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column IsActive
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 136c861b-5d12-45a7-82e5-22a4fa687527
+		summarizeBy: none
+		sourceColumn: IsActive
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Employee = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Dim_Employee = Source{[Item = "Dim_Employee", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Dim_Employee,
+				        {
+				            {"EmployeeKey", Int64.Type},
+				            {"EmployeeCode", type text},
+				            {"EmployeeName", type text},
+				            {"Role", type text},
+				            {"Department", type text},
+				            {"Shift", type text},
+				            {"HireDate", type date},
+				            {"IsActive", type logical}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

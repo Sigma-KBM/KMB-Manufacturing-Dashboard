@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "KMB_SemanticModel"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "07b63348-4cc9-4818-a373-06e80e61651d"
+  }
+}

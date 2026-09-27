@@ -1,0 +1,31 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-US
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["Dim_Date","pSourceFile","Dim_Product","Dim_WorkCenter","Dim_Employee","Dim_Defect","Dim_Supplier","Fact_Production","Fact_QualityInspection","Fact_MRB","Fact_CorrectiveAction","Fact_Training","Fact_Labor","Fact_KpiTargets"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table Dim_Date
+ref table Dim_Product
+ref table Dim_WorkCenter
+ref table Dim_Employee
+ref table Dim_Defect
+ref table Dim_Supplier
+ref table Fact_Production
+ref table Fact_QualityInspection
+ref table Fact_MRB
+ref table Fact_CorrectiveAction
+ref table Fact_Training
+ref table Fact_Labor
+ref table Fact_KpiTargets
+
+ref cultureInfo en-US
+

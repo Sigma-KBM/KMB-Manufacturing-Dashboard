@@ -1,0 +1,36 @@
+{
+  "workbook": "kmb_synthetic_operations.xlsx",
+  "sha256": "c171e240b3e09602aa939aae65ecaa7bab25bffa5c186976dae5866ba0032600",
+  "row_counts": {
+    "Dim_Date": 730,
+    "Dim_Product": 6,
+    "Dim_WorkCenter": 6,
+    "Dim_Employee": 60,
+    "Dim_Defect": 6,
+    "Dim_Supplier": 4,
+    "Fact_Production": 6252,
+    "Fact_QualityInspection": 6252,
+    "Fact_MRB": 717,
+    "Fact_CorrectiveAction": 717,
+    "Fact_Training": 909,
+    "Fact_Labor": 30220,
+    "Fact_KpiTargets": 336
+  },
+  "control_totals": {
+    "produced_qty": 486740,
+    "good_qty": 472232,
+    "scrap_qty": 5655,
+    "rework_qty": 8853,
+    "inspected_qty": 486740,
+    "defect_qty": 10416,
+    "defects_per_1000_units": 21.4,
+    "first_pass_yield_pct": 0.970194,
+    "scrap_rate_pct": 0.011618,
+    "rework_rate_pct": 0.018188,
+    "mrb_cases": 717,
+    "open_mrb_cases": 96,
+    "training_records": 909
+  },
+  "errors": [],
+  "status": "passed"
+}

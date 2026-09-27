@@ -1,0 +1,67 @@
+table Dim_Supplier
+	lineageTag: 7de8ca92-de40-4280-9960-ac4ab90a7a2f
+
+	column SupplierKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 2ecda2ad-ca75-4673-ab6b-ff65fb0316dc
+		summarizeBy: none
+		sourceColumn: SupplierKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierCode
+		dataType: string
+		lineageTag: 9d1583ba-700a-49e5-bd19-f7134124c9bb
+		summarizeBy: none
+		sourceColumn: SupplierCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierName
+		dataType: string
+		lineageTag: 55349e30-33f6-4188-a35f-bba0c3385982
+		summarizeBy: none
+		sourceColumn: SupplierName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commodity
+		dataType: string
+		lineageTag: 9346fbae-bb9a-4a0b-a261-4aa9ad769802
+		summarizeBy: none
+		sourceColumn: Commodity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: 5aa35f8d-d9f4-4982-9fb9-d50f16561048
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Supplier = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Dim_Supplier = Source{[Item = "Dim_Supplier", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Dim_Supplier,
+				        {
+				            {"SupplierKey", Int64.Type},
+				            {"SupplierCode", type text},
+				            {"SupplierName", type text},
+				            {"Commodity", type text},
+				            {"Status", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

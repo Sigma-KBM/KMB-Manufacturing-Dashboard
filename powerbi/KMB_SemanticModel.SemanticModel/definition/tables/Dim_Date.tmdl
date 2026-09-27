@@ -1,0 +1,152 @@
+table Dim_Date
+	lineageTag: 6d5b7683-019d-4309-847e-f5f1536729d4
+	dataCategory: Time
+
+	column DateKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 2c476b86-b14f-4e1c-ae9c-0a19bc9abbe2
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: 16caba00-13fc-451a-a017-baf8056cef9b
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 31a058a9-dcc9-4621-8f48-d9720f0fc9ad
+		summarizeBy: sum
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: string
+		lineageTag: 29458204-8293-4810-b344-d8f7f5ba4ab4
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNumber
+		dataType: int64
+		formatString: 0
+		lineageTag: 81849bdc-d54d-4d0b-9507-0da01b9925f3
+		summarizeBy: sum
+		sourceColumn: MonthNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 686ecf05-8bfd-421a-bd52-1addc022044d
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonth
+		dataType: string
+		lineageTag: 1baff88f-d0f9-41fc-b2c7-aaf982463dbd
+		summarizeBy: none
+		sourceColumn: YearMonth
+
+		annotation SummarizationSetBy = Automatic
+
+	column WeekStartDate
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: e08c70b3-c70b-4e86-bdf9-a9a1aef51689
+		summarizeBy: none
+		sourceColumn: WeekStartDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column WeekLabel
+		dataType: string
+		lineageTag: d5d21dc4-9814-44f1-bded-4c03884cd4be
+		summarizeBy: none
+		sourceColumn: WeekLabel
+
+		annotation SummarizationSetBy = Automatic
+
+	column DayOfWeekNumber
+		dataType: int64
+		formatString: 0
+		lineageTag: 4176234a-3e62-483b-9992-6dc43fb2a5f1
+		summarizeBy: sum
+		sourceColumn: DayOfWeekNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column DayName
+		dataType: string
+		lineageTag: d3150ac9-264d-43fa-a7a8-8e8dbdc48bc4
+		summarizeBy: none
+		sourceColumn: DayName
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsWeekend
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 7bbead42-aa44-4e6a-9ebc-eeeccf2d3bda
+		summarizeBy: none
+		sourceColumn: IsWeekend
+
+		annotation SummarizationSetBy = Automatic
+
+	column IsCompleteWeek
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 09076f16-85d5-4645-bb90-eda4174bf26e
+		summarizeBy: none
+		sourceColumn: IsCompleteWeek
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Date = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Dim_Date = Source{[Item = "Dim_Date", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Dim_Date,
+				        {
+				            {"DateKey", Int64.Type},
+				            {"Date", type date},
+				            {"Year", Int64.Type},
+				            {"Quarter", type text},
+				            {"MonthNumber", Int64.Type},
+				            {"Month", type text},
+				            {"YearMonth", type text},
+				            {"WeekStartDate", type date},
+				            {"WeekLabel", type text},
+				            {"DayOfWeekNumber", Int64.Type},
+				            {"DayName", type text},
+				            {"IsWeekend", type logical},
+				            {"IsCompleteWeek", type logical}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,1339 @@
+table Fact_KpiTargets
+	lineageTag: a72b19ab-6378-4ffe-98a6-1db0db5e465b
+
+	measure 'Selected KPI Target' =
+			
+			SELECTEDVALUE ( Fact_KpiTargets[TargetValue] )
+		lineageTag: 8f9e2ff2-6b6f-4077-9490-79f01966c0cd
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected KPI Direction' =
+			
+			SELECTEDVALUE ( Fact_KpiTargets[Direction] )
+		lineageTag: 6d75a581-1d2e-4c74-aab2-9de655ddfad0
+
+	measure 'Selected KPI Yellow Tolerance %' =
+			
+			SELECTEDVALUE ( Fact_KpiTargets[YellowTolerancePct] )
+		lineageTag: 8868575d-cee8-4852-b546-0dd2ad3c6bb3
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected KPI Red Tolerance %' =
+			
+			SELECTEDVALUE ( Fact_KpiTargets[RedTolerancePct] )
+		lineageTag: 3f6e35f1-4d8e-4818-bc5f-207ab3b2cad4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected KPI Actual' =
+			
+			VAR SelectedKPIName =
+			    SELECTEDVALUE ( Fact_KpiTargets[KPIName] )
+			RETURN
+			    SWITCH (
+			        SelectedKPIName,
+			        "On-Time Production %", [On-Time Production %],
+			        "First Pass Yield %", [First Pass Yield %],
+			        "Defects per 1K Units", [Defects per 1K Units],
+			        "Scrap Rate %", [Scrap Rate %],
+			        "Rework Rate %", [Rework Rate %],
+			        "MRB Open Cases", [Advanced Open MRB Cases Current],
+			        "MRB Aging >30 Days", [Advanced MRB Aging >30 Current],
+			        "Cost of Poor Quality %", [Cost of Poor Quality %],
+			        "OEE Proxy %", [OEE Proxy %],
+			        "Training On-Time %", [Training On-Time %],
+			        "Training Compliance %", [Training Compliance %],
+			        "Corrective Action On-Time %", [Corrective Action On-Time %],
+			        "Target Attainment %", [Target Attainment %],
+			        "Defect Recurrence Rate %", [Defect Recurrence Rate %],
+			        BLANK ()
+			    )
+		lineageTag: 8ea8d1ed-4614-4c7e-a0d5-596fcac011fb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'KPI Status Label' =
+			
+			VAR Actual = [Selected KPI Actual]
+			VAR Target = [Selected KPI Target]
+			VAR Direction = [Selected KPI Direction]
+			VAR RedTolerance = [Selected KPI Red Tolerance %]
+			RETURN
+			    IF (
+			        ISBLANK ( Actual ) || ISBLANK ( Target ) || ISBLANK ( Direction ),
+			        "Not Available",
+			        SWITCH (
+			            Direction,
+			            "HigherIsBetter", IF ( Actual >= Target, "On Target", IF ( Actual >= Target * ( 1 - RedTolerance ), "Watch", "Off Target" ) ),
+			            "LowerIsBetter", IF ( Actual <= Target, "On Target", IF ( Actual <= Target * ( 1 + RedTolerance ), "Watch", "Off Target" ) ),
+			            "Not Available"
+			        )
+			    )
+		lineageTag: a9a52719-62b4-4bf9-bafa-6b3987c0b7ca
+
+	measure 'KPI Status Icon' =
+			
+			SWITCH ( [KPI Status Label], "On Target", "✓", "Watch", "!", "Off Target", "×", "—" )
+		lineageTag: ba27e7eb-10b6-43ab-b2e6-4e8ae1df622d
+
+	measure 'Selected KPI Actual Display' =
+			
+			VAR SelectedKPIName =
+			    SELECTEDVALUE ( Fact_KpiTargets[KPIName] )
+			VAR ActualValue =
+			    [Selected KPI Actual]
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ),
+			        "—",
+			        SWITCH (
+			            SelectedKPIName,
+			            "On-Time Production %", FORMAT ( ActualValue, "0.0%" ),
+			            "First Pass Yield %", FORMAT ( ActualValue, "0.0%" ),
+			            "Defects per 1K Units", FORMAT ( ActualValue, "0.0" ),
+			            "Cost of Poor Quality %", FORMAT ( ActualValue, "0.0%" ),
+			            "OEE Proxy %", FORMAT ( ActualValue, "0.0%" ),
+			            "Target Attainment %", FORMAT ( ActualValue, "0.0%" ),
+			            "Defect Recurrence Rate %", FORMAT ( ActualValue, "0.0%" ),
+			            "MRB Open Cases", FORMAT ( ActualValue, "#,0" ),
+			            "MRB Aging >30 Days", FORMAT ( ActualValue, "#,0" ),
+			            FORMAT ( ActualValue, "#,0.0" )
+			        )
+			    )
+		lineageTag: 720a4da2-5b27-4cd8-8e07-f49ebbb27d7c
+
+	measure 'Selected KPI Target Display' =
+			
+			VAR SelectedKPIName =
+			    SELECTEDVALUE ( Fact_KpiTargets[KPIName] )
+			VAR TargetValue =
+			    [Selected KPI Target]
+			VAR FormattedTarget =
+			    SWITCH (
+			        SelectedKPIName,
+			        "On-Time Production %", FORMAT ( TargetValue, "0.0%" ),
+			        "First Pass Yield %", FORMAT ( TargetValue, "0.0%" ),
+			        "Defects per 1K Units", FORMAT ( TargetValue, "0.0" ),
+			        "Cost of Poor Quality %", FORMAT ( TargetValue, "0.0%" ),
+			        "OEE Proxy %", FORMAT ( TargetValue, "0.0%" ),
+			        "Target Attainment %", FORMAT ( TargetValue, "0.0%" ),
+			        "Defect Recurrence Rate %", FORMAT ( TargetValue, "0.0%" ),
+			        "MRB Open Cases", FORMAT ( TargetValue, "#,0" ),
+			        "MRB Aging >30 Days", FORMAT ( TargetValue, "#,0" ),
+			        FORMAT ( TargetValue, "#,0.0" )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( TargetValue ),
+			        "Target: —",
+			        "Target: " & FormattedTarget
+			    )
+		lineageTag: b21083da-0633-4389-b0f4-e8da6650dad0
+
+	measure 'KPI Status Color' =
+			
+			VAR StatusLabel =
+			    [KPI Status Label]
+			RETURN
+			    SWITCH (
+			        StatusLabel,
+			        "On Target", "#00A66A",
+			        "Watch", "#F4A000",
+			        "Off Target", "#E32636",
+			        "#64748B"
+			    )
+		lineageTag: 99e8807a-cefe-4dae-84db-82571e24f22f
+
+	measure 'KPI Card Background Color' =
+			
+			VAR StatusLabel =
+			    [KPI Status Label]
+			RETURN
+			    SWITCH (
+			        StatusLabel,
+			        "On Target", "#EAF7F1",
+			        "Watch", "#FFF7E6",
+			        "Off Target", "#FDEDEE",
+			        "#F1F5F9"
+			    )
+		lineageTag: dc9ad838-e02a-4497-88cd-0b613dc9ea19
+
+	measure 'KPI Accent Bar' = 1
+		formatString: 0
+		lineageTag: ac00e32c-626e-43b4-ad01-7a589ba3665c
+
+	measure 'Tactical Latest Target Period' =
+			
+			MAX ( Fact_KpiTargets[PeriodStart] )
+		lineageTag: 821e5b31-5a3a-43ed-a517-4f820da5f901
+
+	measure 'Tactical Selected KPI Target' =
+			
+			VAR PeriodStart = [Tactical Latest Target Period]
+			RETURN
+			    IF (
+			        ISBLANK ( PeriodStart ),
+			        BLANK (),
+			        CALCULATE (
+			            SELECTEDVALUE ( Fact_KpiTargets[TargetValue] ),
+			            REMOVEFILTERS ( Dim_Date ),
+			            Fact_KpiTargets[PeriodStart] = PeriodStart
+			        )
+			    )
+		lineageTag: a3e4ab17-36fa-4c3c-b5d9-c8b6655b5f01
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tactical Selected KPI Direction' =
+			
+			VAR PeriodStart = [Tactical Latest Target Period]
+			RETURN
+			    IF (
+			        ISBLANK ( PeriodStart ),
+			        BLANK (),
+			        CALCULATE (
+			            SELECTEDVALUE ( Fact_KpiTargets[Direction] ),
+			            REMOVEFILTERS ( Dim_Date ),
+			            Fact_KpiTargets[PeriodStart] = PeriodStart
+			        )
+			    )
+		lineageTag: 97deaa46-5128-482e-bbc4-41848012c101
+
+	measure 'Tactical Selected KPI Red Tolerance %' =
+			
+			VAR PeriodStart = [Tactical Latest Target Period]
+			RETURN
+			    IF (
+			        ISBLANK ( PeriodStart ),
+			        BLANK (),
+			        CALCULATE (
+			            SELECTEDVALUE ( Fact_KpiTargets[RedTolerancePct] ),
+			            REMOVEFILTERS ( Dim_Date ),
+			            Fact_KpiTargets[PeriodStart] = PeriodStart
+			        )
+			    )
+		lineageTag: 8db2f8f1-396d-4e16-acda-4775e3c3d201
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tactical Selected KPI Name' =
+			
+			SELECTEDVALUE ( Fact_KpiTargets[KPIName], "No KPI selected" )
+		lineageTag: 4d5cb922-6852-4326-b2a6-fb7f008a2e01
+
+	measure 'Tactical Selected KPI Actual Display' =
+			
+			VAR KPIName = [Tactical Selected KPI Name]
+			VAR ActualValue = [Selected KPI Actual]
+			VAR IsPercent =
+			    KPIName IN {
+			        "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+			        "Cost of Poor Quality %", "OEE Proxy %", "Training On-Time %",
+			        "Training Compliance %", "Corrective Action On-Time %",
+			        "Target Attainment %", "Defect Recurrence Rate %"
+			    }
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ),
+			        "—",
+			        SWITCH (
+			            TRUE (),
+			            IsPercent, FORMAT ( ActualValue, "0.0%" ),
+			            KPIName = "Defects per 1K Units", FORMAT ( ActualValue, "0.0" ),
+			            KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, FORMAT ( ActualValue, "#,0" ),
+			            FORMAT ( ActualValue, "#,0.0" )
+			        )
+			    )
+		lineageTag: 6980a43e-e1ea-42c3-9c56-8920b5c85401
+
+	measure 'Tactical Selected KPI Target Display' =
+			
+			VAR KPIName = [Tactical Selected KPI Name]
+			VAR TargetValue = [Tactical Selected KPI Target]
+			VAR IsPercent =
+			    KPIName IN {
+			        "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+			        "Cost of Poor Quality %", "OEE Proxy %", "Training On-Time %",
+			        "Training Compliance %", "Corrective Action On-Time %",
+			        "Target Attainment %", "Defect Recurrence Rate %"
+			    }
+			RETURN
+			    IF (
+			        ISBLANK ( TargetValue ),
+			        "—",
+			        SWITCH (
+			            TRUE (),
+			            IsPercent, FORMAT ( TargetValue, "0.0%" ),
+			            KPIName = "Defects per 1K Units", FORMAT ( TargetValue, "0.0" ),
+			            KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, FORMAT ( TargetValue, "#,0" ),
+			            FORMAT ( TargetValue, "#,0.0" )
+			        )
+			    )
+		lineageTag: cdaac442-f34e-43cc-978b-0b714ca23e01
+
+	measure 'Tactical KPI Gap to Target' =
+			
+			VAR ActualValue = [Selected KPI Actual]
+			VAR TargetValue = [Tactical Selected KPI Target]
+			VAR Direction = [Tactical Selected KPI Direction]
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ) || ISBLANK ( TargetValue ) || ISBLANK ( Direction ),
+			        BLANK (),
+			        SWITCH (
+			            Direction,
+			            "HigherIsBetter", ActualValue - TargetValue,
+			            "LowerIsBetter", TargetValue - ActualValue,
+			            BLANK ()
+			        )
+			    )
+		lineageTag: 9cdb94c6-8c20-4624-8438-68076147a001
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tactical KPI Gap to Target Display' =
+			
+			VAR KPIName = [Tactical Selected KPI Name]
+			VAR GapValue = [Tactical KPI Gap to Target]
+			VAR IsPercent =
+			    KPIName IN {
+			        "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+			        "Cost of Poor Quality %", "OEE Proxy %", "Training On-Time %",
+			        "Training Compliance %", "Corrective Action On-Time %",
+			        "Target Attainment %", "Defect Recurrence Rate %"
+			    }
+			RETURN
+			    IF (
+			        ISBLANK ( GapValue ),
+			        "—",
+			        SWITCH (
+			            TRUE (),
+			            IsPercent, FORMAT ( GapValue * 100, "+0.0;-0.0;0.0" ) & " pp",
+			            KPIName = "Defects per 1K Units", FORMAT ( GapValue, "+0.0;-0.0;0.0" ) & " per 1K",
+			            KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, FORMAT ( GapValue, "+#,0;-#,0;0" ),
+			            FORMAT ( GapValue, "+#,0.0;-#,0.0;0.0" )
+			        )
+			    )
+		lineageTag: 593a95b4-e9cd-40d2-bac4-910f46d3a101
+
+	measure 'Tactical KPI Gap Context' =
+			
+			VAR GapValue = [Tactical KPI Gap to Target]
+			RETURN
+			    IF (
+			        ISBLANK ( GapValue ),
+			        "Not Available",
+			        IF ( GapValue >= 0, "Favorable gap", "Recovery required" )
+			    )
+		lineageTag: 48b0a47e-b2a0-4ddb-a7e4-5b009b864201
+
+	measure 'Tactical KPI Gap Icon' =
+			
+			SWITCH ( [Tactical KPI Gap Context], "Favorable gap", "✓", "Recovery required", "!", "—" )
+		lineageTag: d73d119e-9fae-409e-a9e6-9426658fb301
+
+	measure 'Tactical KPI Gap Color' =
+			
+			SWITCH (
+			    [Tactical KPI Gap Context],
+			    "Favorable gap", "#218C74",
+			    "Recovery required", "#D97706",
+			    "#64748B"
+			)
+		lineageTag: 86146c9b-0661-4ba0-9689-680e0335c401
+
+	measure 'Tactical KPI Gap Background Color' =
+			
+			SWITCH (
+			    [Tactical KPI Gap Context],
+			    "Favorable gap", "#EAF7F1",
+			    "Recovery required", "#FFF7E6",
+			    "#F1F5F9"
+			)
+		lineageTag: c7aa75a3-4e2c-4ef2-8d35-7d2386d7d501
+
+	measure 'Tactical KPI Status Label' =
+			
+			VAR ActualValue = [Selected KPI Actual]
+			VAR TargetValue = [Tactical Selected KPI Target]
+			VAR Direction = [Tactical Selected KPI Direction]
+			VAR RedTolerance = [Tactical Selected KPI Red Tolerance %]
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ) || ISBLANK ( TargetValue ) || ISBLANK ( Direction ),
+			        "Not Available",
+			        SWITCH (
+			            Direction,
+			            "HigherIsBetter", IF ( ActualValue >= TargetValue, "On Target", IF ( ActualValue >= TargetValue * ( 1 - RedTolerance ), "Watch", "Off Target" ) ),
+			            "LowerIsBetter", IF ( ActualValue <= TargetValue, "On Target", IF ( ActualValue <= TargetValue * ( 1 + RedTolerance ), "Watch", "Off Target" ) ),
+			            "Not Available"
+			        )
+			    )
+		lineageTag: 3c12b13c-a7b6-44e9-9a0a-6ae1d408e601
+
+	measure 'Tactical KPI Status Icon' =
+			
+			SWITCH ( [Tactical KPI Status Label], "On Target", "✓", "Watch", "!", "Off Target", "×", "—" )
+		lineageTag: 8e06ebca-5b8b-49c2-83fb-7fcae762f701
+
+	measure 'Tactical KPI Status Color' =
+			
+			SWITCH (
+			    [Tactical KPI Status Label],
+			    "On Target", "#218C74",
+			    "Watch", "#D97706",
+			    "Off Target", "#C73E3A",
+			    "#64748B"
+			)
+		lineageTag: 4459dd18-f9d2-48c3-90e5-b7626be59801
+
+	measure 'Tactical KPI Card Background Color' =
+			
+			SWITCH (
+			    [Tactical KPI Status Label],
+			    "On Target", "#EAF7F1",
+			    "Watch", "#FFF7E6",
+			    "Off Target", "#FDEDEE",
+			    "#F1F5F9"
+			)
+		lineageTag: 78cc3c19-0ff3-4bd0-a52d-8c314058a901
+
+	measure 'Tactical Card Accent Placeholder' =
+			
+			BLANK ()
+		lineageTag: 6b1d2fd1-d6bf-4a3e-bc64-2a2fd0d0aa01
+
+	measure 'Tactical Scorecard Actual' =
+			
+			VAR PeriodStart = [Tactical Latest Target Period]
+			RETURN
+			    IF (
+			        ISBLANK ( PeriodStart ),
+			        BLANK (),
+			        CALCULATE (
+			            [Selected KPI Actual],
+			            REMOVEFILTERS ( Dim_Date ),
+			            DATESBETWEEN ( Dim_Date[Date], PeriodStart, EOMONTH ( PeriodStart, 0 ) )
+			        )
+			    )
+		lineageTag: 02d5b5f8-66fc-4168-b22d-8a7be530bb01
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tactical Scorecard Actual Display' =
+			
+			VAR KPIName = [Tactical Selected KPI Name]
+			VAR ActualValue = [Tactical Scorecard Actual]
+			VAR IsPercent =
+			    KPIName IN {
+			        "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+			        "Cost of Poor Quality %", "OEE Proxy %"
+			    }
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ),
+			        "—",
+			        SWITCH (
+			            TRUE (),
+			            IsPercent, FORMAT ( ActualValue, "0.0%" ),
+			            KPIName = "Defects per 1K Units", FORMAT ( ActualValue, "0.0" ),
+			            KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, FORMAT ( ActualValue, "#,0" ),
+			            FORMAT ( ActualValue, "#,0.0" )
+			        )
+			    )
+		lineageTag: d5523d95-b9ae-4c8a-af7d-c5a2a030cc01
+
+	measure 'Tactical Scorecard Status Label' =
+			
+			VAR ActualValue = [Tactical Scorecard Actual]
+			VAR TargetValue = [Tactical Selected KPI Target]
+			VAR Direction = [Tactical Selected KPI Direction]
+			VAR RedTolerance = [Tactical Selected KPI Red Tolerance %]
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ) || ISBLANK ( TargetValue ) || ISBLANK ( Direction ),
+			        "Not Available",
+			        SWITCH (
+			            Direction,
+			            "HigherIsBetter", IF ( ActualValue >= TargetValue, "On Target", IF ( ActualValue >= TargetValue * ( 1 - RedTolerance ), "Watch", "Off Target" ) ),
+			            "LowerIsBetter", IF ( ActualValue <= TargetValue, "On Target", IF ( ActualValue <= TargetValue * ( 1 + RedTolerance ), "Watch", "Off Target" ) ),
+			            "Not Available"
+			        )
+			    )
+		lineageTag: 71ee384e-f0cf-4f1b-9d19-a04be550dd01
+
+	measure 'Tactical Scorecard Status Icon' =
+			
+			SWITCH ( [Tactical Scorecard Status Label], "On Target", "✓", "Watch", "!", "Off Target", "×", "—" )
+		lineageTag: cfd94a80-f0e6-4f61-a8a5-2ad9c23fee01
+
+	measure 'Tactical Scorecard Status Color' =
+			
+			SWITCH (
+			    [Tactical Scorecard Status Label],
+			    "On Target", "#218C74",
+			    "Watch", "#D97706",
+			    "Off Target", "#C73E3A",
+			    "#64748B"
+			)
+		lineageTag: b68275a0-8b68-4855-9ca7-9d25cbf4ff01
+
+	measure 'Tactical Scorecard Has Actual' =
+			
+			IF ( NOT ISBLANK ( [Tactical Scorecard Actual] ), 1, 0 )
+		formatString: 0
+		lineageTag: 6f92a5b4-0b13-4d65-8fb0-ea1a67ab1001
+
+	measure 'Tactical Action Effectiveness Display' =
+			
+			VAR IsVerified = SELECTEDVALUE ( Fact_CorrectiveAction[EffectivenessVerified] )
+			RETURN
+			    IF ( ISBLANK ( IsVerified ), "—", IF ( IsVerified, "Verified", "Pending" ) )
+		lineageTag: 841e1723-ce36-4ae3-9479-37f384bc2001
+
+	measure 'Tactical Action Status Display' =
+			
+			VAR ActionStatus = SELECTEDVALUE ( Fact_CorrectiveAction[Status] )
+			VAR DueDate = SELECTEDVALUE ( Fact_CorrectiveAction[DueDate] )
+			VAR DataThroughDate = [Model Data-Through Date]
+			RETURN
+			    IF (
+			        ISBLANK ( ActionStatus ),
+			        "—",
+			        IF (
+			            ActionStatus = "Open" && NOT ISBLANK ( DueDate ) && NOT ISBLANK ( DataThroughDate ) && DueDate < DataThroughDate,
+			            "Open · overdue",
+			            ActionStatus
+			        )
+			    )
+		lineageTag: d8ae416c-a9c1-42c5-b578-bddb51cd3001
+
+	measure 'Target Attainment %' =
+			VAR ContextDate = MAX ( Dim_Date[Date] )
+			VAR TargetPeriod = DATE ( YEAR ( ContextDate ), MONTH ( ContextDate ), 1 )
+			VAR KPISet =
+			    DATATABLE (
+			        "KPI", STRING,
+			        {
+			            { "On-Time Production %" },
+			            { "First Pass Yield %" },
+			            { "Defects per 1K Units" },
+			            { "Scrap Rate %" },
+			            { "Rework Rate %" },
+			            { "MRB Open Cases" },
+			            { "MRB Aging >30 Days" },
+			            { "Cost of Poor Quality %" },
+			            { "OEE Proxy %" },
+			            { "Training On-Time %" },
+			            { "Training Compliance %" },
+			            { "Corrective Action On-Time %" },
+			            { "Defect Recurrence Rate %" }
+			        }
+			    )
+			VAR KPIEvaluation =
+			    ADDCOLUMNS (
+			        KPISet,
+			        "__Actual",
+			            VAR MetricName = [KPI]
+			            RETURN
+			                SWITCH (
+			                    MetricName,
+			                    "On-Time Production %", [On-Time Production %],
+			                    "First Pass Yield %", [First Pass Yield %],
+			                    "Defects per 1K Units", [Defects per 1K Units],
+			                    "Scrap Rate %", [Scrap Rate %],
+			                    "Rework Rate %", [Rework Rate %],
+			                    "MRB Open Cases", [Open MRB Cases As Of Date],
+			                    "MRB Aging >30 Days", [MRB Aging >30 Days As Of Date],
+			                    "Cost of Poor Quality %", [Cost of Poor Quality %],
+			                    "OEE Proxy %", [OEE Proxy %],
+			                    "Training On-Time %", [Training On-Time %],
+			                    "Training Compliance %", [Training Compliance %],
+			                    "Corrective Action On-Time %", [Corrective Action On-Time %],
+			                    "Defect Recurrence Rate %", [Defect Recurrence Rate %]
+			                ),
+			        "__Target",
+			            VAR MetricName = [KPI]
+			            RETURN
+			                CALCULATE (
+			                    MAX ( Fact_KpiTargets[TargetValue] ),
+			                    REMOVEFILTERS ( Dim_Date ),
+			                    REMOVEFILTERS ( Fact_KpiTargets ),
+			                    Fact_KpiTargets[KPIName] = MetricName,
+			                    Fact_KpiTargets[PeriodStart] = TargetPeriod,
+			                    Fact_KpiTargets[ScopeType] = "Enterprise",
+			                    Fact_KpiTargets[ScopeKey] = "KMB",
+			                    Fact_KpiTargets[IsActive] = TRUE ()
+			                ),
+			        "__Direction",
+			            VAR MetricName = [KPI]
+			            RETURN
+			                CALCULATE (
+			                    SELECTEDVALUE ( Fact_KpiTargets[Direction] ),
+			                    REMOVEFILTERS ( Dim_Date ),
+			                    REMOVEFILTERS ( Fact_KpiTargets ),
+			                    Fact_KpiTargets[KPIName] = MetricName,
+			                    Fact_KpiTargets[PeriodStart] = TargetPeriod,
+			                    Fact_KpiTargets[ScopeType] = "Enterprise",
+			                    Fact_KpiTargets[ScopeKey] = "KMB",
+			                    Fact_KpiTargets[IsActive] = TRUE ()
+			                )
+			    )
+			VAR EvaluatedKPI =
+			    FILTER (
+			        KPIEvaluation,
+			        NOT ISBLANK ( [__Actual] )
+			            && NOT ISBLANK ( [__Target] )
+			            && NOT ISBLANK ( [__Direction] )
+			    )
+			VAR KPIOnTarget =
+			    FILTER (
+			        EvaluatedKPI,
+			        IF (
+			            [__Direction] = "HigherIsBetter",
+			            [__Actual] >= [__Target],
+			            [__Actual] <= [__Target]
+			        )
+			    )
+			RETURN
+			    DIVIDE ( COUNTROWS ( KPIOnTarget ), COUNTROWS ( EvaluatedKPI ) )
+		formatString: 0.0%
+		lineageTag: 29d8f23b-9c64-4b08-91c3-6a330dc23f03
+
+	measure 'Tactical Week in Selected Last 13' =
+			VAR CurrentWeek = SELECTEDVALUE ( Dim_Date[WeekStartDate] )
+			VAR SelectedCompleteWeeks =
+			    CALCULATETABLE (
+			        VALUES ( Dim_Date[WeekStartDate] ),
+			        ALLSELECTED ( Dim_Date ),
+			        Dim_Date[IsCompleteWeek] = TRUE ()
+			    )
+			VAR Last13Weeks =
+			    TOPN ( 13, SelectedCompleteWeeks, Dim_Date[WeekStartDate], DESC )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( CurrentWeek )
+			            && CONTAINS ( Last13Weeks, Dim_Date[WeekStartDate], CurrentWeek ),
+			        1
+			    )
+		formatString: 0
+		lineageTag: 61cae8fc-08cf-4eb3-9fa4-3bb4a2a8f153
+
+	measure 'Tactical Weekly Actual' =
+			VAR IsVisibleWeek = [Tactical Week in Selected Last 13]
+			VAR KPISelection =
+			    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR ActualValue =
+			    SWITCH (
+			        KPISelection,
+			        "On-Time Production %", [On-Time Production %],
+			        "First Pass Yield %", [First Pass Yield %],
+			        "Defects per 1K Units", [Defects per 1K Units],
+			        "Scrap Rate %", [Scrap Rate %],
+			        "Rework Rate %", [Rework Rate %],
+			        "MRB Open Cases", [Open MRB Cases As Of Date],
+			        "MRB Aging >30 Days", [MRB Aging >30 Days As Of Date],
+			        "Cost of Poor Quality %", [Cost of Poor Quality %],
+			        "OEE Proxy %", [OEE Proxy %],
+			        "Training On-Time %", [Training On-Time %],
+			        "Training Compliance %", [Training Compliance %],
+			        "Corrective Action On-Time %", [Corrective Action On-Time %],
+			        "Target Attainment %", [Target Attainment %],
+			        "Defect Recurrence Rate %", [Defect Recurrence Rate %],
+			        BLANK ()
+			    )
+			RETURN
+			    IF ( IsVisibleWeek = 1, ActualValue )
+		lineageTag: 436bc359-fdc8-4a69-976f-1197540cb107
+
+		formatStringDefinition =
+				VAR KPIName =
+				    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+				RETURN
+				    SWITCH (
+				        TRUE (),
+				        KPIName IN {
+				            "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+				            "Cost of Poor Quality %", "OEE Proxy %", "Training On-Time %",
+				            "Training Compliance %", "Corrective Action On-Time %",
+				            "Target Attainment %", "Defect Recurrence Rate %"
+				        }, "0.0%",
+				        KPIName = "Defects per 1K Units", "0.0",
+				        KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, "#,0",
+				        "0.0"
+				    )
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tactical Weekly Actual Display' =
+			VAR KPIName =
+			    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR ActualValue = [Tactical Weekly Actual]
+			VAR IsPercent =
+			    KPIName IN {
+			        "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+			        "Cost of Poor Quality %", "OEE Proxy %", "Training On-Time %",
+			        "Training Compliance %", "Corrective Action On-Time %",
+			        "Target Attainment %", "Defect Recurrence Rate %"
+			    }
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ),
+			        "—",
+			        SWITCH (
+			            TRUE (),
+			            IsPercent, FORMAT ( ActualValue, "0.0%" ),
+			            KPIName = "Defects per 1K Units", FORMAT ( ActualValue, "0.0" ),
+			            KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, FORMAT ( ActualValue, "#,0" ),
+			            FORMAT ( ActualValue, "#,0.0" )
+			        )
+			    )
+		lineageTag: 9e5dd69b-b9e7-48dc-bea4-e0b34ca72327
+
+	measure 'Tactical Weekly Target' =
+			VAR IsVisibleWeek = [Tactical Week in Selected Last 13]
+			VAR WeekDate = MAX ( Dim_Date[WeekStartDate] )
+			VAR PeriodStart = DATE ( YEAR ( WeekDate ), MONTH ( WeekDate ), 1 )
+			VAR KPISelection =
+			    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR TargetValue =
+			    CALCULATE (
+			        MAX ( Fact_KpiTargets[TargetValue] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        REMOVEFILTERS ( Fact_KpiTargets ),
+			        Fact_KpiTargets[KPIName] = KPISelection,
+			        Fact_KpiTargets[PeriodStart] = PeriodStart,
+			        Fact_KpiTargets[ScopeType] = "Enterprise",
+			        Fact_KpiTargets[ScopeKey] = "KMB",
+			        Fact_KpiTargets[IsActive] = TRUE ()
+			    )
+			RETURN
+			    IF ( IsVisibleWeek = 1, TargetValue )
+		lineageTag: 3b55565c-a609-4e18-8a3f-0eda1ec48613
+
+		formatStringDefinition =
+				VAR KPIName =
+				    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+				RETURN
+				    SWITCH (
+				        TRUE (),
+				        KPIName IN {
+				            "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+				            "Cost of Poor Quality %", "OEE Proxy %", "Training On-Time %",
+				            "Training Compliance %", "Corrective Action On-Time %",
+				            "Target Attainment %", "Defect Recurrence Rate %"
+				        }, "0.0%",
+				        KPIName = "Defects per 1K Units", "0.0",
+				        KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, "#,0",
+				        "0.0"
+				    )
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tactical Weekly Direction' =
+			VAR WeekDate = MAX ( Dim_Date[WeekStartDate] )
+			VAR PeriodStart = DATE ( YEAR ( WeekDate ), MONTH ( WeekDate ), 1 )
+			VAR KPISelection =
+			    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			RETURN
+			    CALCULATE (
+			        SELECTEDVALUE ( Fact_KpiTargets[Direction] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        REMOVEFILTERS ( Fact_KpiTargets ),
+			        Fact_KpiTargets[KPIName] = KPISelection,
+			        Fact_KpiTargets[PeriodStart] = PeriodStart,
+			        Fact_KpiTargets[ScopeType] = "Enterprise",
+			        Fact_KpiTargets[ScopeKey] = "KMB",
+			        Fact_KpiTargets[IsActive] = TRUE ()
+			    )
+		lineageTag: 4500bbad-338d-4bc3-b665-e3c06ce167a9
+
+	measure 'Tactical Weekly Red Tolerance %' =
+			VAR WeekDate = MAX ( Dim_Date[WeekStartDate] )
+			VAR PeriodStart = DATE ( YEAR ( WeekDate ), MONTH ( WeekDate ), 1 )
+			VAR KPISelection =
+			    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			RETURN
+			    CALCULATE (
+			        MAX ( Fact_KpiTargets[RedTolerancePct] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        REMOVEFILTERS ( Fact_KpiTargets ),
+			        Fact_KpiTargets[KPIName] = KPISelection,
+			        Fact_KpiTargets[PeriodStart] = PeriodStart,
+			        Fact_KpiTargets[ScopeType] = "Enterprise",
+			        Fact_KpiTargets[ScopeKey] = "KMB",
+			        Fact_KpiTargets[IsActive] = TRUE ()
+			    )
+		lineageTag: ccfb51cc-8df7-4010-b4bb-c56c504c3868
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tactical Weekly Target Display' =
+			VAR KPIName =
+			    CALCULATE ( SELECTEDVALUE ( Fact_KpiTargets[KPIName] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR TargetValue = [Tactical Weekly Target]
+			VAR IsPercent =
+			    KPIName IN {
+			        "On-Time Production %", "First Pass Yield %", "Scrap Rate %", "Rework Rate %",
+			        "Cost of Poor Quality %", "OEE Proxy %", "Training On-Time %",
+			        "Training Compliance %", "Corrective Action On-Time %",
+			        "Target Attainment %", "Defect Recurrence Rate %"
+			    }
+			RETURN
+			    IF (
+			        ISBLANK ( TargetValue ),
+			        "—",
+			        SWITCH (
+			            TRUE (),
+			            IsPercent, FORMAT ( TargetValue, "0.0%" ),
+			            KPIName = "Defects per 1K Units", FORMAT ( TargetValue, "0.0" ),
+			            KPIName IN { "MRB Open Cases", "MRB Aging >30 Days" }, FORMAT ( TargetValue, "#,0" ),
+			            FORMAT ( TargetValue, "#,0.0" )
+			        )
+			    )
+		lineageTag: 0ecd6fab-0320-4a39-8e6b-eb7bbb980507
+
+	measure 'Tactical Weekly Status Label' =
+			VAR ActualValue = [Tactical Weekly Actual]
+			VAR TargetValue = [Tactical Weekly Target]
+			VAR Direction = [Tactical Weekly Direction]
+			VAR RedTolerance = [Tactical Weekly Red Tolerance %]
+			RETURN
+			    IF (
+			        ISBLANK ( ActualValue ) || ISBLANK ( TargetValue ) || ISBLANK ( Direction ),
+			        "Not Available",
+			        SWITCH (
+			            Direction,
+			            "HigherIsBetter", IF ( ActualValue >= TargetValue, "On Target", IF ( ActualValue >= TargetValue * ( 1 - RedTolerance ), "Watch", "Off Target" ) ),
+			            "LowerIsBetter", IF ( ActualValue <= TargetValue, "On Target", IF ( ActualValue <= TargetValue * ( 1 + RedTolerance ), "Watch", "Off Target" ) ),
+			            "Not Available"
+			        )
+			    )
+		lineageTag: ef42a9e9-23f6-4141-b1e1-c0ff7e35efe1
+
+	measure 'Tactical Status Month 1 Label' =
+			VAR SlotNumber = 1
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        FORMAT ( DATE ( VALUE ( LEFT ( MonthKey, 4 ) ), VALUE ( RIGHT ( MonthKey, 2 ) ), 1 ), "MMM yy" )
+			    )
+		lineageTag: 3dc60176-d8dd-4310-a7c4-49c65e564010
+
+	measure 'Tactical Status Month 1 Icon' =
+			VAR SlotNumber = 1
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "✓", "Watch", "!", "Off Target", "×", BLANK () )
+		lineageTag: 00149303-54c6-4b3f-b9f4-8535428d6bde
+
+	measure 'Tactical Status Month 1 Color' =
+			VAR SlotNumber = 1
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "#218C74", "Watch", "#D97706", "Off Target", "#C73E3A", "#64748B" )
+		lineageTag: d2af1a41-2bfa-417a-aea5-2dd00129c934
+
+	measure 'Tactical Status Month 2 Label' =
+			VAR SlotNumber = 2
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        FORMAT ( DATE ( VALUE ( LEFT ( MonthKey, 4 ) ), VALUE ( RIGHT ( MonthKey, 2 ) ), 1 ), "MMM yy" )
+			    )
+		lineageTag: 63c445a5-939c-457f-bcd5-32decec5ab39
+
+	measure 'Tactical Status Month 2 Icon' =
+			VAR SlotNumber = 2
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "✓", "Watch", "!", "Off Target", "×", BLANK () )
+		lineageTag: 1918784b-e4ae-442c-a8de-3ed0f8e89af1
+
+	measure 'Tactical Status Month 2 Color' =
+			VAR SlotNumber = 2
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "#218C74", "Watch", "#D97706", "Off Target", "#C73E3A", "#64748B" )
+		lineageTag: 8fd834a8-a4d2-4642-b797-0ad1c0ccca7e
+
+	measure 'Tactical Status Month 3 Label' =
+			VAR SlotNumber = 3
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        FORMAT ( DATE ( VALUE ( LEFT ( MonthKey, 4 ) ), VALUE ( RIGHT ( MonthKey, 2 ) ), 1 ), "MMM yy" )
+			    )
+		lineageTag: daa2c014-ffac-43f9-bf4d-1ff9a69e95b0
+
+	measure 'Tactical Status Month 3 Icon' =
+			VAR SlotNumber = 3
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "✓", "Watch", "!", "Off Target", "×", BLANK () )
+		lineageTag: 2307bbc3-d1cf-4be8-aa39-d8bca4dfa1f2
+
+	measure 'Tactical Status Month 3 Color' =
+			VAR SlotNumber = 3
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "#218C74", "Watch", "#D97706", "Off Target", "#C73E3A", "#64748B" )
+		lineageTag: fafa1ff7-3a64-4fdf-98c3-bf6d222a2b8e
+
+	measure 'Tactical Status Month 4 Label' =
+			VAR SlotNumber = 4
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        FORMAT ( DATE ( VALUE ( LEFT ( MonthKey, 4 ) ), VALUE ( RIGHT ( MonthKey, 2 ) ), 1 ), "MMM yy" )
+			    )
+		lineageTag: b7471c60-8269-40cb-9c61-d3f441208a13
+
+	measure 'Tactical Status Month 4 Icon' =
+			VAR SlotNumber = 4
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "✓", "Watch", "!", "Off Target", "×", BLANK () )
+		lineageTag: 360ebd02-04d6-4910-92fd-34e7fead9fa3
+
+	measure 'Tactical Status Month 4 Color' =
+			VAR SlotNumber = 4
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "#218C74", "Watch", "#D97706", "Off Target", "#C73E3A", "#64748B" )
+		lineageTag: 3adef56a-4914-4b79-bfc9-f1cf3302637c
+
+	measure 'Tactical Status Month 5 Label' =
+			VAR SlotNumber = 5
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        FORMAT ( DATE ( VALUE ( LEFT ( MonthKey, 4 ) ), VALUE ( RIGHT ( MonthKey, 2 ) ), 1 ), "MMM yy" )
+			    )
+		lineageTag: 0a7daff8-6d87-45a3-93a1-679020b75ccc
+
+	measure 'Tactical Status Month 5 Icon' =
+			VAR SlotNumber = 5
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "✓", "Watch", "!", "Off Target", "×", BLANK () )
+		lineageTag: 14fae0fe-3cf1-48ff-9c4f-cae6daf9d06a
+
+	measure 'Tactical Status Month 5 Color' =
+			VAR SlotNumber = 5
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "#218C74", "Watch", "#D97706", "Off Target", "#C73E3A", "#64748B" )
+		lineageTag: 96cc9534-16fe-4b70-8242-bd18d069f945
+
+	measure 'Tactical Status Month 6 Label' =
+			VAR SlotNumber = 6
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			RETURN
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        FORMAT ( DATE ( VALUE ( LEFT ( MonthKey, 4 ) ), VALUE ( RIGHT ( MonthKey, 2 ) ), 1 ), "MMM yy" )
+			    )
+		lineageTag: b8a6f686-fe63-4ac7-9de6-168825dca15a
+
+	measure 'Tactical Status Month 6 Icon' =
+			VAR SlotNumber = 6
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "✓", "Watch", "!", "Off Target", "×", BLANK () )
+		lineageTag: d7f9d759-bea5-4412-bc75-022761d8895a
+
+	measure 'Tactical Status Month 6 Color' =
+			VAR SlotNumber = 6
+			VAR SelectedMonths =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonth] ), ALLSELECTED ( Dim_Date[YearMonth] ) )
+			VAR LatestSix = TOPN ( 6, SelectedMonths, Dim_Date[YearMonth], DESC )
+			VAR MonthKey =
+			    IF (
+			        COUNTROWS ( LatestSix ) >= SlotNumber,
+			        MAXX ( TOPN ( SlotNumber, LatestSix, Dim_Date[YearMonth], ASC ), Dim_Date[YearMonth] )
+			    )
+			VAR StatusLabel =
+			    IF (
+			        ISBLANK ( MonthKey ),
+			        BLANK (),
+			        CALCULATE (
+			            [Tactical Scorecard Status Label],
+			            REMOVEFILTERS ( Dim_Date ),
+			            TREATAS ( { MonthKey }, Dim_Date[YearMonth] )
+			        )
+			    )
+			RETURN
+			    SWITCH ( StatusLabel, "On Target", "#218C74", "Watch", "#D97706", "Off Target", "#C73E3A", "#64748B" )
+		lineageTag: 4df4cc07-7b0d-4c3e-9161-eeca01813a53
+
+	column TargetKey
+		dataType: int64
+		formatString: 0
+		lineageTag: ee65af56-9049-4d1f-9d8b-2c588918d868
+		summarizeBy: count
+		sourceColumn: TargetKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column KPIName
+		dataType: string
+		lineageTag: 48ba4fc2-50d5-49a3-aea0-f74f62f91fdd
+		summarizeBy: none
+		sourceColumn: KPIName
+
+		annotation SummarizationSetBy = Automatic
+
+	column PeriodStart
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 8b1f9b50-a3ef-4b4d-b205-b2ec7891181c
+		summarizeBy: none
+		sourceColumn: PeriodStart
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ScopeType
+		dataType: string
+		lineageTag: 16905bad-4d4f-4809-9983-66286d529fc9
+		summarizeBy: none
+		sourceColumn: ScopeType
+
+		annotation SummarizationSetBy = Automatic
+
+	column ScopeKey
+		dataType: string
+		lineageTag: 18addebd-9f73-4fa3-bf21-c98c02e04d03
+		summarizeBy: none
+		sourceColumn: ScopeKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetValue
+		dataType: double
+		lineageTag: 519bb958-e972-437f-a353-47ccbed24f18
+		summarizeBy: sum
+		sourceColumn: TargetValue
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Direction
+		dataType: string
+		lineageTag: d36794a6-daac-49de-9418-bdba3cdea933
+		summarizeBy: none
+		sourceColumn: Direction
+
+		annotation SummarizationSetBy = Automatic
+
+	column YellowTolerancePct
+		dataType: double
+		lineageTag: fe5ef718-2b39-4c02-850d-073966db2b89
+		summarizeBy: sum
+		sourceColumn: YellowTolerancePct
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RedTolerancePct
+		dataType: double
+		lineageTag: 3429afae-5cae-46cb-acf0-dc0b2c34db3d
+		summarizeBy: sum
+		sourceColumn: RedTolerancePct
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column IsActive
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 53f5db5f-4854-4455-a757-d629340f9f67
+		summarizeBy: none
+		sourceColumn: IsActive
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataSource
+		dataType: string
+		lineageTag: de6b9957-59e1-4e1c-bc24-d65daef42e4f
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_KpiTargets = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Fact_KpiTargets = Source{[Item = "Fact_KpiTargets", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Fact_KpiTargets,
+				        {
+				            {"TargetKey", Int64.Type},
+				            {"KPIName", type text},
+				            {"PeriodStart", type date},
+				            {"ScopeType", type text},
+				            {"ScopeKey", type text},
+				            {"TargetValue", type number},
+				            {"Direction", type text},
+				            {"YellowTolerancePct", type number},
+				            {"RedTolerancePct", type number},
+				            {"IsActive", type logical},
+				            {"DataSource", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

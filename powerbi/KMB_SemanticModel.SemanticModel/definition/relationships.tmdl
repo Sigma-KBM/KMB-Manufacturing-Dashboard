@@ -1,0 +1,72 @@
+relationship AutoDetected_68ad24b5-88fa-41b7-99b8-51f8beec1174
+	fromColumn: Fact_Production.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship AutoDetected_24337e5b-cf47-497f-aa91-60aeb745c7e3
+	fromColumn: Fact_Production.ProductKey
+	toColumn: Dim_Product.ProductKey
+
+relationship AutoDetected_b14f6d8e-0770-4ae7-b8a4-7c852274545c
+	fromColumn: Fact_Production.WorkCenterKey
+	toColumn: Dim_WorkCenter.WorkCenterKey
+
+relationship 172b1775-5d20-cae5-0ced-69b5f1991ff5
+	fromColumn: Fact_QualityInspection.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 5b87dcec-8955-a0ca-f068-d9c68dd8ef7d
+	fromColumn: Fact_QualityInspection.ProductKey
+	toColumn: Dim_Product.ProductKey
+
+relationship 13bf8fb3-af7b-9751-5810-3e5e919ec906
+	fromColumn: Fact_QualityInspection.WorkCenterKey
+	toColumn: Dim_WorkCenter.WorkCenterKey
+
+relationship 3a549309-65eb-7ce7-2818-3d616e48aea4
+	fromColumn: Fact_QualityInspection.DefectKey
+	toColumn: Dim_Defect.DefectKey
+
+relationship 9b8267ce-1c41-80c4-9a36-829fbbc84a31
+	fromColumn: Fact_MRB.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 5eb73874-36b9-7307-ab98-7e19fc70db81
+	fromColumn: Fact_MRB.ProductKey
+	toColumn: Dim_Product.ProductKey
+
+relationship 266ee59f-e542-99a4-ed8b-11bf9118d77c
+	fromColumn: Fact_MRB.WorkCenterKey
+	toColumn: Dim_WorkCenter.WorkCenterKey
+
+relationship c2ef992c-2992-7868-d1e9-91d9b806d781
+	fromColumn: Fact_MRB.SupplierKey
+	toColumn: Dim_Supplier.SupplierKey
+
+relationship 7261263f-7ce7-c6c7-8b3c-c24dcbc4fc92
+	fromColumn: Fact_MRB.DefectKey
+	toColumn: Dim_Defect.DefectKey
+
+relationship e658cf3b-69d8-d5b4-94c9-96efdc997c45
+	fromColumn: Fact_CorrectiveAction.MRBCaseKey
+	toColumn: Fact_MRB.MRBCaseKey
+
+relationship c4fd1e8e-21cd-26e0-a003-e9ecf1b8226f
+	fromColumn: Fact_Training.EmployeeKey
+	toColumn: Dim_Employee.EmployeeKey
+
+relationship e80badc9-411c-e262-459d-bf87054ae9fc
+	fromColumn: Fact_Labor.DateKey
+	toColumn: Dim_Date.DateKey
+
+relationship 41d7326a-9543-982d-eb23-6b9a67c3949d
+	fromColumn: Fact_Labor.EmployeeKey
+	toColumn: Dim_Employee.EmployeeKey
+
+relationship 528987af-af4d-d46e-4954-afab4751635d
+	fromColumn: Fact_Labor.WorkCenterKey
+	toColumn: Dim_WorkCenter.WorkCenterKey
+
+relationship 670d7c16-03ea-60be-24f1-304b319597c4
+	fromColumn: Fact_KpiTargets.PeriodStart
+	toColumn: Dim_Date.Date
+

@@ -1,0 +1,440 @@
+table Fact_Production
+	lineageTag: 82df6053-0a8f-40ab-9762-edee4d5fb941
+
+	measure 'Planned Quantity' =
+			
+			SUM ( Fact_Production[PlannedQty] )
+		formatString: #,0
+		lineageTag: bec03730-9d1a-4352-917c-caec7193d90f
+
+	measure 'Produced Quantity' =
+			
+			SUM ( Fact_Production[ProducedQty] )
+		formatString: #,0
+		lineageTag: 063bab9f-f6dd-49a2-9239-93a8c765ff58
+
+	measure 'Good Quantity' =
+			
+			SUM ( Fact_Production[GoodQty] )
+		formatString: #,0
+		lineageTag: 454686a0-2a50-4a80-997d-5c5748058f20
+
+	measure 'Scrap Quantity' =
+			
+			SUM ( Fact_Production[ScrapQty] )
+		formatString: #,0
+		lineageTag: 381678c6-0be3-4629-94e0-7b3cbb3aaa0a
+
+	measure 'Rework Quantity' =
+			
+			SUM ( Fact_Production[ReworkQty] )
+		formatString: #,0
+		lineageTag: eb9d3b74-5083-4936-82b1-adf11c9fb730
+
+	measure 'Production Attainment %' =
+			
+			DIVIDE ( [Produced Quantity], [Planned Quantity] )
+		formatString: #,0.0%;-#,0.0%;#,0.0%
+		lineageTag: d3e51faa-83f5-4c2b-a608-fe600711928b
+
+	measure 'First Pass Yield %' =
+			
+			DIVIDE ( [Good Quantity], [Produced Quantity] )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 64173d93-626f-4b69-bb45-efb8e64dccb3
+
+	measure 'Scrap Rate %' =
+			
+			DIVIDE ( [Scrap Quantity], [Produced Quantity] )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 32014dac-12d8-4474-87fc-ce3d0ddfa68c
+
+	measure 'Rework Rate %' =
+			
+			DIVIDE ( [Rework Quantity], [Produced Quantity] )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 592e113a-1f29-4a27-833a-291b9d1ac6a9
+
+	measure 'Production Value' =
+			
+			SUM ( Fact_Production[ProductionValue] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: d881c376-3583-4cf4-9c46-96d2ad21707b
+
+	measure 'Downtime Minutes' =
+			
+			SUM ( Fact_Production[DowntimeMinutes] )
+		formatString: #,0
+		lineageTag: 6cd411a2-81da-4aa0-a6b9-8eae2162c358
+
+	measure 'Production Labor Hours' =
+			
+			SUM ( Fact_Production[LaborHours] )
+		formatString: 0.00
+		lineageTag: 78288f84-ee26-43a5-a69d-bfd48fc524d5
+
+	measure 'Available Production Minutes' =
+			
+			[Production Labor Hours] * 60
+		formatString: #,0
+		lineageTag: 3015ef98-7e82-4054-af2c-c806243a7e0b
+
+	measure 'Operating Minutes' =
+			
+			[Available Production Minutes] - [Downtime Minutes]
+		formatString: #,0
+		lineageTag: e1684131-46dc-4365-8077-9262ae70afc7
+
+	measure 'Availability Proxy %' =
+			
+			DIVIDE ( [Operating Minutes], [Available Production Minutes] )
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 1739a6a9-72d5-4c3e-9654-8a292d6350a5
+
+	measure 'Performance Proxy %' =
+			
+			DIVIDE (
+			    SUMX (
+			        Fact_Production,
+			        Fact_Production[ProducedQty] * RELATED ( Dim_Product[StandardCycleMinutes] )
+			    ),
+			    [Operating Minutes]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: fd9d7b22-fa16-40da-9277-c0f900051e06
+
+	measure 'OEE Proxy %' =
+			
+			[Availability Proxy %] * [Performance Proxy %] * [First Pass Yield %]
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: bd5028ce-15c3-4ea5-8adf-b052008b7a14
+
+	measure 'Scrap Value at Standard' =
+			
+			SUMX (
+			    Fact_Production,
+			    Fact_Production[ScrapQty] * RELATED ( Dim_Product[StandardUnitValue] )
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 7859ee04-6b6b-4d9d-8e94-19b13315d665
+
+	measure 'Rework Value at Standard' =
+			
+			SUMX (
+			    Fact_Production,
+			    Fact_Production[ReworkQty] * RELATED ( Dim_Product[StandardUnitValue] )
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: ab499038-f0b8-4e4e-bf06-1378e2ce1a3f
+
+	measure 'Quality Loss Value at Standard' =
+			
+			[Scrap Value at Standard] + [Rework Value at Standard]
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 94357f31-47d7-451a-a37e-23e44064266a
+
+	measure 'On-Time Production %' =
+			
+			DIVIDE (
+			    CALCULATE (
+			        [Produced Quantity],
+			        FILTER (
+			            Fact_Production,
+			            Fact_Production[ActualCompletionDateTime]
+			                <= Fact_Production[PlannedCompletionDateTime]
+			        )
+			    ),
+			    [Planned Quantity]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 09bcb843-e163-4bfb-8e03-9c3f7c077d53
+
+	measure 'Scrap Cost' =
+			
+			SUMX (
+			    Fact_Production,
+			    Fact_Production[ScrapQty] * RELATED ( Dim_Product[StandardUnitCost] )
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: a11eecdf-ab46-446b-8738-5ab730e6fff3
+
+	measure 'Rework Cost' =
+			
+			SUMX (
+			    Fact_Production,
+			    Fact_Production[ReworkQty] * RELATED ( Dim_Product[StandardUnitCost] )
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		lineageTag: 92850f0e-f45a-4440-93bd-29106c96e660
+
+	measure 'Cost of Poor Quality %' =
+			
+			DIVIDE (
+			    [Scrap Cost] + [Rework Cost] + [MRB Material Cost],
+			    [Production Value]
+			)
+		formatString: 0.0%;-0.0%;0.0%
+		lineageTag: 94d751fe-597f-4d5b-9fed-c61ec2352dd3
+
+	measure 'Quality Loss Quantity' =
+			
+			[Scrap Quantity] + [Rework Quantity]
+		formatString: #,0
+		lineageTag: 9061595e-4d9e-44ba-a047-559971bcb3f2
+
+	measure 'Quality Loss Cell Color' =
+			
+			VAR CurrentLoss = [Quality Loss Quantity]
+			VAR MatrixCells =
+			    CROSSJOIN (
+			        ALL ( Dim_WorkCenter[Line] ),
+			        ALL ( Fact_Production[Shift] )
+			    )
+			VAR MatrixLosses =
+			    ADDCOLUMNS (
+			        MatrixCells,
+			        "@QualityLoss", CALCULATE ( [Quality Loss Quantity] )
+			    )
+			VAR Position =
+			    RANKX ( MatrixLosses, [@QualityLoss], CurrentLoss, ASC, DENSE )
+			VAR CellCount = COUNTROWS ( MatrixLosses )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( CurrentLoss ), "#F1F5F9",
+			        Position = 1, "#EAF7F1",
+			        Position = CellCount, "#FDEDEE",
+			        "#FFF7E6"
+			    )
+		lineageTag: e9a2d83b-3c59-4e77-944e-66ae4f979b67
+
+	measure 'Production Variance' =
+			
+			[Produced Quantity] - [Planned Quantity]
+		formatString: #,0;-#,0;#,0
+		lineageTag: fced4784-d268-4c29-9ce4-251c1090fbdd
+
+	measure 'Production Plan Status' =
+			
+			VAR Attainment = [Production Attainment %]
+			RETURN
+			    IF (
+			        ISBLANK ( Attainment ),
+			        "Not Available",
+			        IF ( Attainment >= 1, "On Plan", "Below Plan" )
+			    )
+		lineageTag: c9d83f66-1ca5-4171-920a-1bd63775a4d4
+
+	measure 'Production Plan Status Icon' =
+			
+			SWITCH ( [Production Plan Status], "On Plan", "✓", "Below Plan", "!", "—" )
+		lineageTag: f890e4f7-e258-4bfb-8cb1-7b088d78d8eb
+
+	measure 'Production Plan Status Color' =
+			
+			SWITCH (
+			    [Production Plan Status],
+			    "On Plan", "#218C74",
+			    "Below Plan", "#D97706",
+			    "#64748B"
+			)
+		lineageTag: b526e8dc-71e4-4091-a060-b9d408a740fd
+
+	measure 'Production Plan Card Background Color' =
+			
+			SWITCH (
+			    [Production Plan Status],
+			    "On Plan", "#EAF7F1",
+			    "Below Plan", "#FFF7E6",
+			    "#F1F5F9"
+			)
+		lineageTag: 916a0b6f-a471-4a02-a244-303cf65d7ca2
+
+	measure 'Production Plan Accent Bar' = 1
+		formatString: 0
+		lineageTag: 0831c4db-19e8-4caa-a8c6-7520713a49b1
+
+	measure 'Operational Exception Flag' =
+			
+			IF ( [Production Variance] < 0, 1, 0 )
+		formatString: 0
+		lineageTag: 7b64ac5d-862f-4584-8c2d-ca700a98fa94
+
+	column ProductionEventKey
+		dataType: int64
+		formatString: 0
+		lineageTag: ba3c94b6-7c03-4c58-8fb6-634dc68d890e
+		summarizeBy: count
+		sourceColumn: ProductionEventKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateKey
+		dataType: int64
+		formatString: 0
+		lineageTag: c871b4b9-497b-4049-bd90-22d033eabf76
+		summarizeBy: none
+		sourceColumn: DateKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		formatString: 0
+		lineageTag: 578122ce-eecb-4aef-ac5c-b69ecd11bd4f
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column WorkCenterKey
+		dataType: int64
+		formatString: 0
+		lineageTag: a69935eb-38a1-430b-8bea-a95fe3fb7195
+		summarizeBy: none
+		sourceColumn: WorkCenterKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Shift
+		dataType: string
+		lineageTag: 380a8fdf-2269-4b24-831d-081077b6aca1
+		summarizeBy: none
+		sourceColumn: Shift
+
+		annotation SummarizationSetBy = Automatic
+
+	column PlannedQty
+		dataType: int64
+		formatString: 0
+		lineageTag: 4dcb9272-4823-4f86-b396-735db6b2ba34
+		summarizeBy: sum
+		sourceColumn: PlannedQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProducedQty
+		dataType: int64
+		formatString: 0
+		lineageTag: fbc6aa21-ee65-4d2c-8211-6888e172c638
+		summarizeBy: sum
+		sourceColumn: ProducedQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column GoodQty
+		dataType: int64
+		formatString: 0
+		lineageTag: 25d03dc4-6dae-49aa-9fcc-3058876bd37f
+		summarizeBy: sum
+		sourceColumn: GoodQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column ScrapQty
+		dataType: int64
+		formatString: 0
+		lineageTag: 5b1ee380-5195-4018-8ea8-c9d39c63e74e
+		summarizeBy: sum
+		sourceColumn: ScrapQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReworkQty
+		dataType: int64
+		formatString: 0
+		lineageTag: a97fdd62-d3d8-4f1b-8ccd-24d9ade59a72
+		summarizeBy: sum
+		sourceColumn: ReworkQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column LaborHours
+		dataType: double
+		lineageTag: 1ba379dd-909a-46a0-aea6-f001f72e32d2
+		summarizeBy: sum
+		sourceColumn: LaborHours
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DowntimeMinutes
+		dataType: int64
+		formatString: 0
+		lineageTag: 3fc3631d-d87f-492a-b2eb-9e7e17d4b967
+		summarizeBy: sum
+		sourceColumn: DowntimeMinutes
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductionValue
+		dataType: double
+		lineageTag: 37ec1ed0-cf2f-46cb-abea-11554692caaa
+		summarizeBy: sum
+		sourceColumn: ProductionValue
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataSource
+		dataType: string
+		lineageTag: 886fc4a8-2f39-4e9c-b1c1-90a92d8df64e
+		summarizeBy: none
+		sourceColumn: DataSource
+
+		annotation SummarizationSetBy = Automatic
+
+	column PlannedCompletionDateTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5253cce5-4792-44cd-92e8-5f6879464099
+		summarizeBy: none
+		sourceColumn: PlannedCompletionDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	column ActualCompletionDateTime
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c78b974e-906c-4d87-8882-e0be99ff8eb9
+		summarizeBy: none
+		sourceColumn: ActualCompletionDateTime
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Production = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(pSourceFile), null, true),
+				    Fact_Production = Source{[Item = "Fact_Production", Kind = "Table"]}[Data],
+				    #"Changed Type" = Table.TransformColumnTypes(
+				        Fact_Production,
+				        {
+				            {"ProductionEventKey", Int64.Type},
+				            {"DateKey", Int64.Type},
+				            {"ProductKey", Int64.Type},
+				            {"WorkCenterKey", Int64.Type},
+				            {"Shift", type text},
+				            {"PlannedQty", Int64.Type},
+				            {"ProducedQty", Int64.Type},
+				            {"GoodQty", Int64.Type},
+				            {"ScrapQty", Int64.Type},
+				            {"ReworkQty", Int64.Type},
+				            {"LaborHours", type number},
+				            {"DowntimeMinutes", Int64.Type},
+				            {"ProductionValue", type number},
+				            {"PlannedCompletionDateTime", type datetime},
+				            {"ActualCompletionDateTime", type datetime},
+				            {"DataSource", type text}
+				        }
+				    )
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

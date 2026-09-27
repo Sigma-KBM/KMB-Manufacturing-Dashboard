@@ -1,0 +1,36 @@
+# Power BI local and cache artifacts
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+**/.pbi/editorSettings.json
+**/cache.abf
+
+# Office temporary and recovery files
+~$*
+*.tmp
+*.bak
+*.recovery
+
+# Local secrets and environment files
+.env
+.env.*
+*.credentials
+*.token
+secrets/
+
+# Private and unapproved artifacts
+data/private/
+data/real/
+images/drafts/
+exports/
+logs/
+
+# Python runtime files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Local packaging and review output
+*.zip
+audit/
+distribution/
