@@ -42,12 +42,12 @@ The source workbook, Power BI project structure, semantic-model references, repo
 - All three registered resources and all eight image references resolve to files in the project.
 - Four report pages are present with unique names.
 - The Process & Line Quality Heatmap is bound to dynamic background and font-color measures; blank cells render with the documented neutral treatment.
-- KPI status icon color logic is present across the report. Thirteen icon-bearing visuals use the governed status-color measure, while the remaining scorecard uses explicit rules.
+- KPI status icon color logic is present across the report. Measure-driven and rules-based scorecards use the same green, amber, red, and neutral status convention.
 - The only functional-definition edits made for publication were the portable source placeholder and the removal of an external-tool name from one embedded calendar asset and its four references. The calendar image binary is unchanged.
 
-### Open visual finding
+### Final visual confirmation
 
-Two scorecard rule sets compare the Off Target symbol with the ASCII character `x`, while their DAX measures emit the multiplication symbol `×`. The icon value and status label remain correct, but the Off Target icon can retain the default font color instead of red. This was documented rather than changed because the publication cleanup was required not to alter dashboard behavior. Confirm the rendered result in Power BI Desktop before publishing screenshots.
+The two rules-based scorecards compare the same `×` symbol emitted by their DAX measures. Final Power BI Desktop captures confirm that On Target, Watch, and Off Target icons render with the intended green, amber, and red colors. The Tactical trend uses KPI-aware axis formatting, and the Advanced heatmap shows dynamic severity colors with `N/A` for process-and-line combinations that are not configured.
 
 ## Repository hygiene checks
 
