@@ -50,4 +50,4 @@ The complete project, source code, documentation, and reproduction steps are ava
 
 **GitHub repository:** https://github.com/Sigma-KBM/KMB-Manufacturing-Dashboard
 
-Before publishing the article, add one overview image and one close-up image that demonstrates the tactical or advanced analytical experience.
+Suggested publication images are available in `assets/screenshots/`: one tactical-management view and one advanced-analytics view.

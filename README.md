@@ -15,6 +15,16 @@ A four-page Power BI portfolio project that demonstrates executive, operational,
 | Tactical Performance Management | Department heads | Manage weekly recovery against governed KPI targets and corrective-action commitments |
 | Advanced Quality Analytics | Analysts and quality specialists | Investigate defect trends, concentration, process variation, and potential drivers |
 
+## Dashboard preview
+
+### Tactical Performance Management
+
+![Tactical Performance Management dashboard showing governed KPI targets, a 13-week trend, monthly status, and the corrective-action queue](assets/screenshots/tactical-performance-management.png)
+
+### Advanced Quality Analytics
+
+![Advanced Quality Analytics dashboard showing weekly defect rate, defect Pareto, process and line heatmap, and investigation detail](assets/screenshots/advanced-quality-analytics.png)
+
 ## Portfolio highlights
 
 - Shared star-schema semantic model across four audience-specific report pages.
@@ -38,7 +48,7 @@ A four-page Power BI portfolio project that demonstrates executive, operational,
 ## Repository structure
 
 ```text
-assets/       Repository images
+assets/       Repository images and dashboard screenshots
 data/         Synthetic Excel source, manifest, and validation results
 docs/         Scope, model, KPI, data-contract, design, and validation documentation
 powerbi/      Power BI Project, report definition, and semantic model
